@@ -57,6 +57,8 @@ cp env.example .env
 
 ## 快速开始
 
+### 方式一：本地部署
+
 1. 安装依赖：
 ```bash
 npm install
@@ -73,6 +75,35 @@ npm run dev
 ```
 
 服务启动后访问：http://127.0.0.1:3000
+
+### 方式二：GitHub Codespaces 部署
+
+1. **创建 Codespace**
+   - 点击仓库页面的 "Code" 按钮
+   - 选择 "Codespaces" 标签
+   - 点击 "Create codespace on master"
+
+2. **配置环境变量**
+   ```bash
+   cp env.example .env
+   ```
+   在 `.env` 文件中配置必要的腾讯云密钥
+
+3. **安装依赖并启动**
+   ```bash
+   npm install
+   npm start
+   ```
+
+4. **访问服务**
+   - Codespaces 会自动转发端口
+   - 点击端口面板中的 3000 端口链接即可访问
+
+**Codespaces 优势：**
+- ☁️ 无需本地环境配置
+- 🚀 快速启动开发环境
+- 🔒 安全的密钥管理
+- 🌐 自动端口转发
 
 ## 项目结构
 
