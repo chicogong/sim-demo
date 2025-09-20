@@ -878,8 +878,23 @@
             }
         }
 
+        // 记录已静音的用户，避免重复操作
+        const mutedUsers = new Set();
+
         function handleAudioVolume(event) {
-            event.result.forEach(({ userId, volume }) => {
+            event.result.forEach(async ({ userId, volume }) => {
+                // 如果是机器人且还没静音过，直接静音
+                if (userId && userId.startsWith('ai_') && !mutedUsers.has(userId)) {
+                    try {
+                        await trtcState.client.muteRemoteAudio(userId, true);
+                        mutedUsers.add(userId);
+                        console.log(`✅ 已静音机器人 ${userId}`);
+                    } catch (error) {
+                        console.error(`静音机器人 ${userId} 失败:`, error);
+                    }
+                }
+
+                // 原有的音量条显示逻辑
                 if (userId === '' || userId === trtcState.botUserId) {
                     const smoothedVolume = (volume * 0.7) + (prevVolume * 0.3);
                     prevVolume = smoothedVolume;
