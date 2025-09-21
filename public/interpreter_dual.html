@@ -330,6 +330,45 @@
             font-weight: 400;
         }
 
+        /* 用户加入/离开通知样式 */
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            max-width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification-toast.leave {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .notification-icon {
+            font-size: 20px;
+        }
+
+        .notification-message {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
         .controls-container {
             display: flex;
             gap: 15px;
@@ -911,7 +950,9 @@
             currentUserId: null,
             botUserId: null,
             isVideoEnabled: false,
-            isVideoViewVisible: false
+            isVideoViewVisible: false,
+            userCount: 1,  // 包括自己
+            remoteUsers: new Set()  // 追踪远端用户
         };
         let prevVolume = 0;
 
@@ -941,6 +982,8 @@
             client.on(TRTC.EVENT.AUDIO_VOLUME, handleAudioVolume);
             client.on(TRTC.EVENT.REMOTE_VIDEO_AVAILABLE, handleRemoteVideo);
             client.on(TRTC.EVENT.REMOTE_VIDEO_UNAVAILABLE, handleRemoteVideoUnavailable);
+            client.on(TRTC.EVENT.REMOTE_USER_ENTER, handleUserEnter);
+            client.on(TRTC.EVENT.REMOTE_USER_LEAVE, handleUserLeave);
             client.enableAudioVolumeEvaluation(50);
             await client.startLocalAudio();
             return client;
@@ -955,6 +998,10 @@
                 await trtcState.client.exitRoom();
                 trtcState.client.destroy();
                 trtcState.client = null;
+
+                // 重置用户计数
+                trtcState.userCount = 1;
+                trtcState.remoteUsers.clear();
             }
         }
 
@@ -1111,6 +1158,136 @@
                     remoteVideoContainer.innerHTML = '';
                 }
             }
+        }
+
+        // 用户加入/离开处理
+        function handleUserEnter(event) {
+            const { userId } = event;
+            console.log('用户加入房间:', userId);
+
+            // 不显示AI用户的加入提示
+            if (userId.startsWith('ai_')) {
+                return;
+            }
+
+            // 添加到远端用户集合
+            if (!trtcState.remoteUsers.has(userId)) {
+                trtcState.remoteUsers.add(userId);
+                trtcState.userCount = 1 + trtcState.remoteUsers.size;
+            }
+
+            const friendlyName = getFriendlyUserName(userId);
+            showNotification(`${friendlyName} 加入了房间`, 'join');
+
+            // 更新连接状态显示
+            const connectionStatus = document.getElementById('connection-status');
+            if (connectionStatus) {
+                const humanUserCount = Array.from(trtcState.remoteUsers).filter(id => !id.startsWith('ai_')).length + 1;
+                connectionStatus.textContent = `已连接(${humanUserCount}人)`;
+                connectionStatus.classList.add('active');
+            }
+        }
+
+        function handleUserLeave(event) {
+            const { userId, reason } = event;
+            console.log('用户离开房间:', userId, '原因:', reason);
+
+            // 不显示AI用户的离开提示
+            if (userId.startsWith('ai_')) {
+                return;
+            }
+
+            // 从远端用户集合移除
+            if (trtcState.remoteUsers.has(userId)) {
+                trtcState.remoteUsers.delete(userId);
+                trtcState.userCount = 1 + trtcState.remoteUsers.size;
+            }
+
+            const friendlyName = getFriendlyUserName(userId);
+            showNotification(`${friendlyName} 离开了房间`, 'leave');
+
+            // 更新连接状态显示
+            const connectionStatus = document.getElementById('connection-status');
+            if (connectionStatus) {
+                const humanUserCount = Array.from(trtcState.remoteUsers).filter(id => !id.startsWith('ai_')).length + 1;
+                connectionStatus.textContent = humanUserCount > 1 ? `已连接(${humanUserCount}人)` : '已连接';
+                if (humanUserCount === 1) {
+                    connectionStatus.classList.remove('active');
+                }
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'join') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = `notification-toast ${type === 'leave' ? 'leave' : ''}`;
+
+            const icon = type === 'join' ? '👋' : '👋';
+            notification.innerHTML = `
+                <span class="notification-icon">${icon}</span>
+                <span class="notification-message">${message}</span>
+            `;
+
+            // 添加到页面
+            document.body.appendChild(notification);
+
+            // 触发显示动画
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+
+            // 3秒后自动消失
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+
+            // 播放提示音（可选）
+            playNotificationSound(type);
+        }
+
+        // 播放提示音
+        function playNotificationSound(type) {
+            try {
+                // 创建简单的音频提示
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // 设置音调（加入用高音，离开用低音）
+                oscillator.frequency.value = type === 'join' ? 800 : 400;
+                oscillator.type = 'sine';
+
+                // 设置音量渐变
+                gainNode.gain.value = 0.1;
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+                // 播放
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                // 忽略音频播放错误（用户可能还没有与页面交互）
+                console.log('音频提示跳过:', e.message);
+            }
+        }
+
+        // 获取友好的用户名称
+        function getFriendlyUserName(userId) {
+            if (userId === trtcState.currentUserId) {
+                return '你';
+            }
+            // 提取用户ID中的数字部分作为简短标识
+            const match = userId.match(/\d+/);
+            if (match) {
+                return `用户${match[0].slice(-4)}`;
+            }
+            return userId;
         }
 
         // 识别语言配置
