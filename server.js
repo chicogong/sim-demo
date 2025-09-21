@@ -1,5 +1,8 @@
 require('dotenv').config();
 const express = require('express');
+const https = require('https');
+const http = require('http');
+const fs = require('fs');
 const path = require('path');
 const morgan = require('morgan');
 const cors = require('cors');
@@ -159,5 +162,31 @@ app.delete('/interpretation', async (req, res) => {
 
 
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '127.0.0.1';
-app.listen(PORT, HOST, () => console.log(`App running at http://${HOST}:${PORT}/`));
+const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
+const HOST = process.env.HOST || '0.0.0.0';
+
+// HTTP Server
+const httpServer = http.createServer(app);
+httpServer.listen(PORT, HOST, () => {
+  console.log(`HTTP Server running at http://${HOST}:${PORT}/`);
+});
+
+// HTTPS Server (if certificates exist)
+const certPath = path.join(__dirname, 'certs', 'cert.pem');
+const keyPath = path.join(__dirname, 'certs', 'key.pem');
+
+if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+  const httpsOptions = {
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath)
+  };
+
+  const httpsServer = https.createServer(httpsOptions, app);
+  httpsServer.listen(HTTPS_PORT, HOST, () => {
+    console.log(`HTTPS Server running at https://${HOST}:${HTTPS_PORT}/`);
+    console.log(`⚠️  For local network access, use: https://${require('os').networkInterfaces().en0?.find(i => i.family === 'IPv4')?.address || 'YOUR_LOCAL_IP'}:${HTTPS_PORT}/`);
+  });
+} else {
+  console.log('⚠️  HTTPS certificates not found. Only HTTP server is running.');
+  console.log('   To enable HTTPS, generate certificates in ./certs/ folder');
+}

@@ -856,12 +856,17 @@
                 if (data.type === MESSAGE_TYPES.CONVERSATION) {
                     const { sender, payload } = data;
                     const isRobot = sender.includes('ai_');
+                    if (sender.includes('user_')) {
+                        trtcState.client.setRemoteAudioVolume(sender, 5);
+                        console.log(`setRemoteAudioVolume for ${sender}`)
+                    }
                     // 如果是AI消息且有translation_text字段，优先使用translation_text
                     const displayText = isRobot && payload.translation_text ? payload.translation_text : payload.text;
                     const translationLang = isRobot && payload.translation_language ? payload.translation_language : null;
                     addMessage(sender, displayText, isRobot ? 'ai' : 'user', payload.roundid, payload.end, translationLang);
                     updateSubtitles();
                 } 
+
                 else if (data.type === MESSAGE_TYPES.STATE_CHANGE) {
                     console.log('State change:', data.payload);
                     const stateMap = { 1: '聆听中', 2: '分析中', 3: '翻译中', 4: '已中断' };
@@ -880,19 +885,8 @@
 
         // 记录已静音的用户，避免重复操作
         const mutedUsers = new Set();
-
         function handleAudioVolume(event) {
             event.result.forEach(async ({ userId, volume }) => {
-                // 如果是机器人且还没静音过，直接静音
-                if (userId && userId.startsWith('ai_') && !mutedUsers.has(userId)) {
-                    try {
-                        await trtcState.client.muteRemoteAudio(userId, true);
-                        mutedUsers.add(userId);
-                        console.log(`✅ 已静音机器人 ${userId}`);
-                    } catch (error) {
-                        console.error(`静音机器人 ${userId} 失败:`, error);
-                    }
-                }
 
                 // 原有的音量条显示逻辑
                 if (userId === '' || userId === trtcState.botUserId) {
@@ -1375,7 +1369,7 @@
                 const transcriptionParams = {
                     "UserId": credentials.robotId,
                     "UserSig": credentials.robotSig,
-                    "TranscriptionMode": 0,
+                    "TranscriptionMode": 1,
                     "TargetUserId": credentials.userId
                 };
 
@@ -1419,7 +1413,9 @@
                     userId: credentials.userId,
                     userSig: credentials.userSig
                 });
-                
+                console.log(`✅ 已静音自己的机器人 ${JSON.stringify(userInfo)}`);
+                await trtcState.client.muteRemoteAudio(userInfo.userId, true);
+                // await trtcState.client.setRemoteAudioVolume(userInfo.userId, 5);
                 setUIStatus('connection', '已连接');
                 updateStatus('room', 'RTC已连接');
                 
