@@ -939,12 +939,24 @@
     <script src='https://web.sdk.qcloud.com/trtc/webrtc/v5/dist/trtc.js'></script>
     
     <script>
-        // 基础配置
+        // ========================================
+        // 1. 配置和常量定义
+        // ========================================
         const API_BASE_URL = window.location.origin;
-        const MESSAGE_TYPES = { CONVERSATION: 10000, STATE_CHANGE: 10001, ERROR_CALLBACK: 10030, METRICS_CALLBACK: 10020 };
         const MAX_TARGET_LANGUAGES = 5;
-        
-        // TRTC 状态
+
+        // TRTC消息类型
+        const MESSAGE_TYPES = {
+            CONVERSATION: 10000,
+            STATE_CHANGE: 10001,
+            ERROR_CALLBACK: 10030,
+            METRICS_CALLBACK: 10020
+        };
+
+        // ========================================
+        // 2. 全局状态管理
+        // ========================================
+        // TRTC相关状态
         const trtcState = {
             client: null,
             currentUserId: null,
@@ -954,9 +966,13 @@
             userCount: 1,  // 包括自己
             remoteUsers: new Set()  // 追踪远端用户
         };
+
+        // 音量相关
         let prevVolume = 0;
 
-        // API 请求
+        // ========================================
+        // 3. API通信模块
+        // ========================================
         async function apiRequest(endpoint, data, method = "POST") {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: method,
@@ -967,7 +983,9 @@
             return await response.json();
         }
 
-        // TRTC 房间管理
+        // ========================================
+        // 4. TRTC核心功能
+        // ========================================
         async function enterTRTCRoom(params) {
             const client = trtcState.client = TRTC.create();
             await client.enterRoom({
@@ -1005,7 +1023,10 @@
             }
         }
 
-        // 消息处理
+        // ========================================
+        // 5. TRTC事件处理
+        // ========================================
+        // 处理自定义消息
         function handleTRTCMessage(event) {
             try {
                 const data = JSON.parse(new TextDecoder().decode(event.data));
@@ -1041,7 +1062,7 @@
             }
         }
 
-        // 记录已静音的用户，避免重复操作
+        // 处理音量变化
         const mutedUsers = new Set();
         function handleAudioVolume(event) {
             event.result.forEach(async ({ userId, volume }) => {
@@ -1064,7 +1085,9 @@
             }
         }
 
-        // 视频相关功能
+        // ========================================
+        // 6. 视频功能模块
+        // ========================================
         async function toggleCamera() {
             if (!trtcState.client) {
                 alert('请先开始翻译');
@@ -1160,7 +1183,9 @@
             }
         }
 
-        // 用户加入/离开处理
+        // ========================================
+        // 7. 用户管理和通知
+        // ========================================
         function handleUserEnter(event) {
             const { userId } = event;
             console.log('用户加入房间:', userId);
@@ -1290,7 +1315,9 @@
             return userId;
         }
 
-        // 识别语言配置
+        // ========================================
+        // 8. 语言配置
+        // ========================================
         const RECOGNITION_LANGUAGES = {
             "16k_zh_en_caption": "中英caption",
             "en": "英语",
@@ -1520,7 +1547,9 @@
             }
         }
 
-        // UI 更新
+        // ========================================
+        // 9. UI更新和字幕管理
+        // ========================================
         function updateUI() {
             const roomState = document.getElementById('room_state')?.value || '';
             const robotState = document.getElementById('robot_state')?.value || '';
@@ -1576,7 +1605,9 @@
             }
         }
 
-        // 语言选择
+        // ========================================
+        // 10. 语言选择和验证
+        // ========================================
         function validateLanguageSelection() {
             const sourceLanguage = document.getElementById('source-language').value;
             const errorDiv = document.getElementById('language-error');
@@ -1717,7 +1748,9 @@
             }
         }
 
-        // 翻译控制
+        // ========================================
+        // 11. 翻译控制（启动/停止）
+        // ========================================
         async function startTranslation() {
             if (state.isProcessing || !validateLanguageSelection()) return;
             
@@ -1798,8 +1831,8 @@
                     userSig: credentials.userSig
                 });
                 console.log(`✅ 已静音自己的机器人 ${JSON.stringify(userInfo)}`);
-                await trtcState.client.muteRemoteAudio(userInfo.userId, true);
-                // await trtcState.client.setRemoteAudioVolume(userInfo.userId, 5);
+                // await trtcState.client.muteRemoteAudio(userInfo.userId, true);
+                await trtcState.client.setRemoteAudioVolume(userInfo.userId, 10);
                 setUIStatus('connection', '已连接');
                 updateStatus('room', 'RTC已连接');
                 
@@ -1882,6 +1915,9 @@
             }
         }
 
+        // ========================================
+        // 12. 页面初始化
+        // ========================================
         document.addEventListener('DOMContentLoaded', function() {
             loadLanguageOptions();
             initializeDefaultTargetLanguages();
