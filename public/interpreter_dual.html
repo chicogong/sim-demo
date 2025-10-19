@@ -1038,7 +1038,7 @@
                     const { sender, payload } = data;
                     const isRobot = sender.includes('ai_');
                     if (sender.includes('user_')) {
-                        trtcState.client.setRemoteAudioVolume(sender, 40);
+                        trtcState.client.setRemoteAudioVolume(sender, 10);
                         console.log(`setRemoteAudioVolume for ${sender}`)
                     }
                     // 如果是AI消息且有translation_text字段，优先使用translation_text
