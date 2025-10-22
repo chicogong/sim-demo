@@ -257,9 +257,9 @@
 
         .controls-container {
             display: flex;
-            gap: 15px;
+            flex-direction: column;
+            gap: 18px;
             margin-bottom: 25px;
-            flex-wrap: wrap;
         }
 
         .language-selector {
@@ -267,87 +267,91 @@
             min-width: 180px;
         }
 
-        .language-selector select {
+        .language-selector select,
+        .language-selector input[readonly] {
             width: 100%;
-            padding: 12px 18px;
-            font-size: 15px;
-            border: 2px solid #e8f0ff;
-            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
             background: white;
-            color: #333;
+            color: #334155;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 12px center;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 10px center;
             background-repeat: no-repeat;
-            background-size: 16px;
+            background-size: 14px;
+            padding-right: 32px;
         }
 
-        .language-selector select:focus {
+        .language-selector select:focus,
+        .language-selector input[readonly]:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .language-selector select:disabled {
-            background-color: #f3f4f6;
-            color: #9ca3af;
+            background-color: #f8fafc;
+            color: #94a3b8;
             cursor: not-allowed;
+            opacity: 0.6;
         }
 
         .language-selector label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #667eea;
-            font-size: 14px;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #64748b;
+            font-size: 13px;
         }
 
         .language-pair-container {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
         }
 
         .language-error {
             color: #ef4444;
             font-size: 12px;
-            margin-top: 5px;
+            margin-top: -6px;
             display: none;
+        }
+
+        @media screen and (max-width: 768px) {
+            .language-pair-container {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* 场景预设样式 */
         .scenario-presets {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
         }
 
         .scenario-btn {
-            flex: 1;
-            min-width: 110px;
-            padding: 12px 16px;
-            border: 2px solid #e8f0ff;
-            border-radius: 12px;
+            padding: 14px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
             background: white;
-            color: #667eea;
-            font-weight: 600;
-            font-size: 14px;
+            color: #475569;
+            font-weight: 500;
+            font-size: 13px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
+            transition: all 0.2s ease;
+            text-align: left;
+            position: relative;
         }
 
         .scenario-btn:hover {
             border-color: #667eea;
-            background: #f8f9ff;
-            transform: translateY(-2px);
+            background: #fafbff;
         }
 
         .scenario-btn.active {
@@ -356,25 +360,33 @@
             color: white;
         }
 
-        .scenario-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
+        .scenario-btn.active .scenario-description {
+            color: rgba(255, 255, 255, 0.85);
         }
 
-        .scenario-icon {
-            font-size: 20px;
+        .scenario-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .scenario-name {
-            font-size: 13px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .scenario-description {
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.3;
+            font-weight: 400;
         }
 
         /* 高级配置折叠面板 */
         .advanced-config {
             margin-bottom: 20px;
-            border: 2px solid #e8f0ff;
-            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             overflow: hidden;
             background: white;
         }
@@ -383,30 +395,30 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 18px;
-            background: #f8f9ff;
+            padding: 14px 16px;
+            background: #fafbfc;
             cursor: pointer;
             user-select: none;
-            transition: all 0.3s ease;
+            transition: background 0.2s ease;
         }
 
         .advanced-config-header:hover {
-            background: #eef2ff;
+            background: #f1f3f5;
         }
 
         .advanced-config-title {
-            font-weight: 600;
-            color: #667eea;
-            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            font-size: 13px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .advanced-config-toggle {
-            font-size: 18px;
-            color: #667eea;
-            transition: transform 0.3s ease;
+            font-size: 12px;
+            color: #94a3b8;
+            transition: transform 0.2s ease;
         }
 
         .advanced-config-toggle.expanded {
@@ -424,86 +436,96 @@
         }
 
         .advanced-config-body {
-            padding: 20px 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            background: #fafbfc;
         }
 
         .config-section {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .config-section label {
-            font-weight: 600;
-            color: #667eea;
-            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            font-size: 12px;
         }
 
         .config-section input,
         .config-section select {
             width: 100%;
-            padding: 10px 14px;
-            border: 2px solid #e8f0ff;
-            border-radius: 10px;
-            font-size: 14px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
         }
 
         .config-section input:focus,
         .config-section select:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .config-hint {
-            font-size: 12px;
-            color: #9ca3af;
-            margin-top: 2px;
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.3;
+        }
+
+        @media screen and (max-width: 768px) {
+            .advanced-config-body {
+                grid-template-columns: 1fr;
+            }
         }
 
         .toggle-button {
-            flex: 1;
-            min-width: 120px;
-            padding: 10px 20px;
-            font-size: 14px;
+            width: 100%;
+            padding: 14px 24px;
+            font-size: 15px;
             font-weight: 600;
             border: none;
-            border-radius: 24px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
+            transition: all 0.2s ease;
             background: #667eea;
             color: white;
-            border: 1px solid #667eea;
         }
 
         .toggle-button:hover {
             background: #5a67d8;
-            border-color: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .toggle-button.active {
             background: #ef4444;
-            border-color: #ef4444;
         }
 
         .toggle-button.active:hover {
             background: #dc2626;
-            border-color: #dc2626;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
         .toggle-button:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
-            background: #9ca3af;
-            border-color: #9ca3af;
+            transform: none;
         }
 
         .toggle-button:disabled:hover {
-            background: #9ca3af;
-            border-color: #9ca3af;
+            background: #667eea;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .toggle-button.active:disabled:hover {
+            background: #ef4444;
         }
 
         .toggle-text {
@@ -836,21 +858,25 @@
             <div class="controls-container">
                 <!-- 场景预设 -->
                 <div class="scenario-presets">
+                    <button class="scenario-btn" data-scenario="quiet">
+                        <div class="scenario-name">安静环境</div>
+                        <div class="scenario-description">录音棚、单人录制</div>
+                    </button>
                     <button class="scenario-btn" data-scenario="meeting">
-                        <span class="scenario-icon">👔</span>
-                        <span class="scenario-name">商务会议</span>
+                        <div class="scenario-name">会议室</div>
+                        <div class="scenario-description">多人会议、轻微噪音</div>
+                    </button>
+                    <button class="scenario-btn" data-scenario="noisy">
+                        <div class="scenario-name">嘈杂环境</div>
+                        <div class="scenario-description">展会、活动现场</div>
                     </button>
                     <button class="scenario-btn" data-scenario="presentation">
-                        <span class="scenario-icon">🎤</span>
-                        <span class="scenario-name">演讲报告</span>
-                    </button>
-                    <button class="scenario-btn" data-scenario="conversation">
-                        <span class="scenario-icon">💬</span>
-                        <span class="scenario-name">日常对话</span>
+                        <div class="scenario-name">演讲模式</div>
+                        <div class="scenario-description">单人演讲、较少停顿</div>
                     </button>
                     <button class="scenario-btn active" data-scenario="custom">
-                        <span class="scenario-icon">⚙️</span>
-                        <span class="scenario-name">自定义</span>
+                        <div class="scenario-name">自定义</div>
+                        <div class="scenario-description">手动调整参数</div>
                     </button>
                 </div>
 
@@ -859,12 +885,12 @@
                     <div class="language-selector">
                         <label for="source-language">识别语言</label>
                         <select id="source-language">
-                            <option value="">请选择识别语言</option>
+                            <option value="">请选择</option>
                         </select>
                     </div>
                     <div class="language-selector">
                         <label for="target-languages">输出语言</label>
-                        <input id="target-languages-btn" type="text" readonly placeholder="选择目标语言" style="width: 100%; padding: 12px 18px; border: 2px solid #e8f0ff; border-radius: 12px; background: white; color: #333; cursor: pointer; background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 12px center; background-repeat: no-repeat; background-size: 16px;">
+                        <input id="target-languages-btn" type="text" readonly placeholder="请选择">
                     </div>
                 </div>
 
@@ -872,7 +898,6 @@
                 <div class="advanced-config">
                     <div class="advanced-config-header" onclick="toggleAdvancedConfig()">
                         <div class="advanced-config-title">
-                            <span>⚙️</span>
                             <span>高级配置</span>
                         </div>
                         <span class="advanced-config-toggle">▼</span>
@@ -882,57 +907,55 @@
                             <div class="config-section">
                                 <label for="translation-mode">翻译模式</label>
                                 <select id="translation-mode">
-                                    <option value="1">文字翻译</option>
-                                    <option value="2" selected>语音同传</option>
+                                    <option value="1">文字</option>
+                                    <option value="2" selected>语音</option>
                                 </select>
                             </div>
 
                             <div class="config-section">
-                                <label for="voice-type">音色选择</label>
+                                <label for="voice-type">音色</label>
                                 <select id="voice-type">
-                                    <option value="female-kefu-xiaorui">女声小睿</option>
-                                    <option value="Chinese (Mandarin)_IntellectualGirl">知性女声</option>
-                                    <option value="male-qn-qingse">青年清澈男声</option>
-                                    <option value="female-tianmei">甜美女声</option>
-                                    <option value="danya_xuejie">淡雅学姐</option>
-                                    <option value="male-qn-daxuesheng-jingpin">精品男声</option>
+                                    <option value="female-kefu-xiaorui">女声-小睿</option>
+                                    <option value="Chinese (Mandarin)_IntellectualGirl">女声-知性</option>
+                                    <option value="male-qn-qingse">男声-清澈</option>
+                                    <option value="female-tianmei">女声-甜美</option>
+                                    <option value="danya_xuejie">女声-淡雅</option>
+                                    <option value="male-qn-daxuesheng-jingpin">男声-精品</option>
                                 </select>
-                                <span class="config-hint">仅在语音同传模式下生效</span>
                             </div>
 
                             <div class="config-section">
-                                <label for="semantic-eagerness">语义断句等级</label>
+                                <label for="semantic-eagerness">语义断句</label>
                                 <select id="semantic-eagerness">
                                     <option value="off" selected>关闭</option>
-                                    <option value="low">Low - 低</option>
-                                    <option value="medium">Medium - 中</option>
-                                    <option value="high">High - 高</option>
-                                    <option value="auto">Auto - 自动</option>
+                                    <option value="low">低</option>
+                                    <option value="medium">中</option>
+                                    <option value="high">高</option>
+                                    <option value="auto">自动</option>
                                 </select>
-                                <span class="config-hint">控制语义完整性和响应速度的平衡</span>
                             </div>
 
                             <div class="config-section">
-                                <label for="vad-silence-time">VAD 静默阈值 (ms)</label>
+                                <label for="vad-silence-time">静默阈值 (ms)</label>
                                 <input id="vad-silence-time" type="number" min="240" max="2000" value="1000">
-                                <span class="config-hint">范围: 240-2000ms，默认1000ms</span>
+                                <span class="config-hint">检测语音停顿的时长</span>
                             </div>
 
                             <div class="config-section">
-                                <label for="vad-level">VAD 远场抑制等级</label>
+                                <label for="vad-level">降噪等级</label>
                                 <select id="vad-level">
-                                    <option value="0">0 - 关闭</option>
-                                    <option value="1">1 - 低</option>
-                                    <option value="2" selected>2 - 中（推荐）</option>
-                                    <option value="3">3 - 高</option>
+                                    <option value="0">关闭</option>
+                                    <option value="1">低</option>
+                                    <option value="2" selected>中</option>
+                                    <option value="3">高</option>
                                 </select>
-                                <span class="config-hint">抑制远场噪音和背景人声</span>
+                                <span class="config-hint">背景噪音抑制强度</span>
                             </div>
 
-                            <div class="config-section">
-                                <label for="hotword-list">热词表</label>
-                                <input id="hotword-list" type="text" placeholder="例如：同声传译|10,TRTC|11">
-                                <span class="config-hint">格式：词|权重，逗号分隔，权重1-11</span>
+                            <div class="config-section" style="grid-column: 1 / -1;">
+                                <label for="hotword-list">热词 (可选)</label>
+                                <input id="hotword-list" type="text" placeholder="同声传译|10,TRTC|11">
+                                <span class="config-hint">词|权重，逗号分隔</span>
                             </div>
                         </div>
                     </div>
@@ -992,33 +1015,45 @@
 
         // 场景预设配置
         const SCENARIO_PRESETS = {
+            quiet: {
+                name: '安静环境',
+                description: '适合录音棚、单人录制等无背景噪音场景',
+                vadSilenceTime: 800,
+                vadLevel: 0,
+                semanticEagerness: 'medium',
+                translationMode: 2,
+                voiceType: 'female-tianmei'
+            },
             meeting: {
-                name: '商务会议',
+                name: '会议室',
+                description: '多人会议，有轻微背景噪音和回声',
                 vadSilenceTime: 700,
                 vadLevel: 2,
                 semanticEagerness: 'medium',
                 translationMode: 2,
                 voiceType: 'Chinese (Mandarin)_IntellectualGirl'
             },
-            presentation: {
-                name: '演讲报告',
-                vadSilenceTime: 1200,
+            noisy: {
+                name: '嘈杂环境',
+                description: '展会、活动现场等强背景噪音场景',
+                vadSilenceTime: 600,
                 vadLevel: 3,
-                semanticEagerness: 'high',
+                semanticEagerness: 'low',
                 translationMode: 2,
                 voiceType: 'male-qn-daxuesheng-jingpin'
             },
-            conversation: {
-                name: '日常对话',
-                vadSilenceTime: 500,
-                vadLevel: 1,
-                semanticEagerness: 'low',
+            presentation: {
+                name: '演讲模式',
+                description: '单人持续演讲，较少停顿',
+                vadSilenceTime: 1200,
+                vadLevel: 2,
+                semanticEagerness: 'high',
                 translationMode: 2,
-                voiceType: 'female-kefu-xiaorui'
+                voiceType: 'male-qn-qingse'
             },
             custom: {
                 name: '自定义',
-                // 保持当前设置
+                description: '手动调整参数以适配特殊场景'
             }
         };
 
