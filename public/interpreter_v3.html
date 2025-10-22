@@ -318,6 +318,151 @@
             display: none;
         }
 
+        /* 场景预设样式 */
+        .scenario-presets {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .scenario-btn {
+            flex: 1;
+            min-width: 110px;
+            padding: 12px 16px;
+            border: 2px solid #e8f0ff;
+            border-radius: 12px;
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .scenario-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+        }
+
+        .scenario-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .scenario-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .scenario-icon {
+            font-size: 20px;
+        }
+
+        .scenario-name {
+            font-size: 13px;
+        }
+
+        /* 高级配置折叠面板 */
+        .advanced-config {
+            margin-bottom: 20px;
+            border: 2px solid #e8f0ff;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .advanced-config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 18px;
+            background: #f8f9ff;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+
+        .advanced-config-header:hover {
+            background: #eef2ff;
+        }
+
+        .advanced-config-title {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .advanced-config-toggle {
+            font-size: 18px;
+            color: #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .advanced-config-toggle.expanded {
+            transform: rotate(180deg);
+        }
+
+        .advanced-config-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .advanced-config-content.expanded {
+            max-height: 1000px;
+        }
+
+        .advanced-config-body {
+            padding: 20px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .config-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .config-section label {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 13px;
+        }
+
+        .config-section input,
+        .config-section select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e8f0ff;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .config-section input:focus,
+        .config-section select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .config-hint {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
         .toggle-button {
             flex: 1;
             min-width: 120px;
@@ -689,35 +834,28 @@
             </div>
 
             <div class="controls-container">
+                <!-- 场景预设 -->
+                <div class="scenario-presets">
+                    <button class="scenario-btn" data-scenario="meeting">
+                        <span class="scenario-icon">👔</span>
+                        <span class="scenario-name">商务会议</span>
+                    </button>
+                    <button class="scenario-btn" data-scenario="presentation">
+                        <span class="scenario-icon">🎤</span>
+                        <span class="scenario-name">演讲报告</span>
+                    </button>
+                    <button class="scenario-btn" data-scenario="conversation">
+                        <span class="scenario-icon">💬</span>
+                        <span class="scenario-name">日常对话</span>
+                    </button>
+                    <button class="scenario-btn active" data-scenario="custom">
+                        <span class="scenario-icon">⚙️</span>
+                        <span class="scenario-name">自定义</span>
+                    </button>
+                </div>
+
+                <!-- 核心配置 -->
                 <div class="language-pair-container">
-                    <div class="language-selector">
-                        <label for="translation-mode">翻译模式</label>
-                        <select id="translation-mode">
-                            <option value="1">文字翻译</option>
-                            <option value="2" selected>语音同传</option>
-                        </select>
-                    </div>
-                    <div class="language-selector">
-                        <label for="voice-type">音色选择</label>
-                        <select id="voice-type">
-                            <option value="female-kefu-xiaorui">女声小睿</option>
-                            <option value="Chinese (Mandarin)_IntellectualGirl">知性女声</option>
-                            <option value="male-qn-qingse">青年清澈男声</option>
-                            <option value="female-tianmei">甜美女声</option>
-                            <option value="danya_xuejie">淡雅学姐</option>
-                            <option value="male-qn-daxuesheng-jingpin">精品男声</option>
-                        </select>
-                    </div>
-                    <div class="language-selector">
-                        <label for="semantic-eagerness">语义断句等级</label>
-                        <select id="semantic-eagerness">
-                            <option value="off" selected>关闭</option>
-                            <option value="low">low</option>
-                            <option value="medium">medium</option>
-                            <option value="high">high</option>
-                            <option value="auto">auto</option>
-                        </select>
-                    </div>
                     <div class="language-selector">
                         <label for="source-language">识别语言</label>
                         <select id="source-language">
@@ -725,27 +863,81 @@
                         </select>
                     </div>
                     <div class="language-selector">
-                        <label for="vad-silence-time">VAD 静默阈值(ms)</label>
-                        <input id="vad-silence-time" type="number" min="240" max="2000" value="1000" style="width: 100%; padding: 12px 18px; border: 2px solid #e8f0ff; border-radius: 12px;">
-                    </div>
-                    <div class="language-selector">
-                        <label for="vad-level">VAD 远场人声抑制等级 (0-3)</label>
-                        <select id="vad-level">
-                            <option value="0">0（关闭）</option>
-                            <option value="1">1</option>
-                            <option value="2" selected>2（推荐）</option>
-                            <option value="3">3（最强）</option>
-                        </select>
-                    </div>
-                    <div class="language-selector">
-                        <label for="hotword-list">热词表（逗号分隔，格式：词|权重）</label>
-                        <input id="hotword-list" type="text" placeholder="同声传译|10,实时|5,TRTC|11" style="width: 100%; padding: 12px 18px; border: 2px solid #e8f0ff; border-radius: 12px;">
-                    </div>
-                    <div class="language-selector">
                         <label for="target-languages">输出语言</label>
                         <input id="target-languages-btn" type="text" readonly placeholder="选择目标语言" style="width: 100%; padding: 12px 18px; border: 2px solid #e8f0ff; border-radius: 12px; background: white; color: #333; cursor: pointer; background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 12px center; background-repeat: no-repeat; background-size: 16px;">
                     </div>
                 </div>
+
+                <!-- 高级配置面板 -->
+                <div class="advanced-config">
+                    <div class="advanced-config-header" onclick="toggleAdvancedConfig()">
+                        <div class="advanced-config-title">
+                            <span>⚙️</span>
+                            <span>高级配置</span>
+                        </div>
+                        <span class="advanced-config-toggle">▼</span>
+                    </div>
+                    <div class="advanced-config-content" id="advanced-config-content">
+                        <div class="advanced-config-body">
+                            <div class="config-section">
+                                <label for="translation-mode">翻译模式</label>
+                                <select id="translation-mode">
+                                    <option value="1">文字翻译</option>
+                                    <option value="2" selected>语音同传</option>
+                                </select>
+                            </div>
+
+                            <div class="config-section">
+                                <label for="voice-type">音色选择</label>
+                                <select id="voice-type">
+                                    <option value="female-kefu-xiaorui">女声小睿</option>
+                                    <option value="Chinese (Mandarin)_IntellectualGirl">知性女声</option>
+                                    <option value="male-qn-qingse">青年清澈男声</option>
+                                    <option value="female-tianmei">甜美女声</option>
+                                    <option value="danya_xuejie">淡雅学姐</option>
+                                    <option value="male-qn-daxuesheng-jingpin">精品男声</option>
+                                </select>
+                                <span class="config-hint">仅在语音同传模式下生效</span>
+                            </div>
+
+                            <div class="config-section">
+                                <label for="semantic-eagerness">语义断句等级</label>
+                                <select id="semantic-eagerness">
+                                    <option value="off" selected>关闭</option>
+                                    <option value="low">Low - 低</option>
+                                    <option value="medium">Medium - 中</option>
+                                    <option value="high">High - 高</option>
+                                    <option value="auto">Auto - 自动</option>
+                                </select>
+                                <span class="config-hint">控制语义完整性和响应速度的平衡</span>
+                            </div>
+
+                            <div class="config-section">
+                                <label for="vad-silence-time">VAD 静默阈值 (ms)</label>
+                                <input id="vad-silence-time" type="number" min="240" max="2000" value="1000">
+                                <span class="config-hint">范围: 240-2000ms，默认1000ms</span>
+                            </div>
+
+                            <div class="config-section">
+                                <label for="vad-level">VAD 远场抑制等级</label>
+                                <select id="vad-level">
+                                    <option value="0">0 - 关闭</option>
+                                    <option value="1">1 - 低</option>
+                                    <option value="2" selected>2 - 中（推荐）</option>
+                                    <option value="3">3 - 高</option>
+                                </select>
+                                <span class="config-hint">抑制远场噪音和背景人声</span>
+                            </div>
+
+                            <div class="config-section">
+                                <label for="hotword-list">热词表</label>
+                                <input id="hotword-list" type="text" placeholder="例如：同声传译|10,TRTC|11">
+                                <span class="config-hint">格式：词|权重，逗号分隔，权重1-11</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="language-error" id="language-error">识别语言和输出语言不能相同</div>
                 <button id="translation_toggle" class="toggle-button">
                     <span class="toggle-text">🎤 开始翻译</span>
@@ -797,6 +989,40 @@
         const API_BASE_URL = window.location.origin;
         const MESSAGE_TYPES = { CONVERSATION: 10000, STATE_CHANGE: 10001, ERROR_CALLBACK: 10030, METRICS_CALLBACK: 10020 };
         const MAX_TARGET_LANGUAGES = 5;
+
+        // 场景预设配置
+        const SCENARIO_PRESETS = {
+            meeting: {
+                name: '商务会议',
+                vadSilenceTime: 700,
+                vadLevel: 2,
+                semanticEagerness: 'medium',
+                translationMode: 2,
+                voiceType: 'Chinese (Mandarin)_IntellectualGirl'
+            },
+            presentation: {
+                name: '演讲报告',
+                vadSilenceTime: 1200,
+                vadLevel: 3,
+                semanticEagerness: 'high',
+                translationMode: 2,
+                voiceType: 'male-qn-daxuesheng-jingpin'
+            },
+            conversation: {
+                name: '日常对话',
+                vadSilenceTime: 500,
+                vadLevel: 1,
+                semanticEagerness: 'low',
+                translationMode: 2,
+                voiceType: 'female-kefu-xiaorui'
+            },
+            custom: {
+                name: '自定义',
+                // 保持当前设置
+            }
+        };
+
+        let currentScenario = 'custom';
         
         // TRTC 状态
         const trtcState = { client: null, currentUserId: null, botUserId: null };
@@ -1175,6 +1401,54 @@
             }
         }
 
+        // 折叠面板控制
+        function toggleAdvancedConfig() {
+            const content = document.getElementById('advanced-config-content');
+            const toggle = document.querySelector('.advanced-config-toggle');
+
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                toggle.classList.add('expanded');
+            }
+        }
+
+        // 场景预设切换
+        function applyScenario(scenario) {
+            currentScenario = scenario;
+
+            // 更新按钮状态
+            document.querySelectorAll('.scenario-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.scenario === scenario) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // 应用预设配置（如果不是自定义）
+            if (scenario !== 'custom') {
+                const preset = SCENARIO_PRESETS[scenario];
+                document.getElementById('vad-silence-time').value = preset.vadSilenceTime;
+                document.getElementById('vad-level').value = preset.vadLevel;
+                document.getElementById('semantic-eagerness').value = preset.semanticEagerness;
+                document.getElementById('translation-mode').value = preset.translationMode;
+                document.getElementById('voice-type').value = preset.voiceType;
+            }
+        }
+
+        // 初始化场景按钮
+        function initializeScenarios() {
+            document.querySelectorAll('.scenario-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!state.isActive) {
+                        applyScenario(this.dataset.scenario);
+                    }
+                });
+            });
+        }
+
         // 语言选择
         function validateLanguageSelection() {
             const sourceLanguage = document.getElementById('source-language').value;
@@ -1319,17 +1593,20 @@
         // 翻译控制
         async function startTranslation() {
             if (state.isProcessing || !validateLanguageSelection()) return;
-            
+
             // 清空字幕面板
             clearSubtitleMessages();
-            
+
             state.isProcessing = true;
             const button = document.getElementById('translation_toggle');
             const text = button.querySelector('.toggle-text');
-            
+
             button.disabled = true;
             text.textContent = '连接中...';
-            
+
+            // 禁用场景按钮
+            document.querySelectorAll('.scenario-btn').forEach(btn => btn.disabled = true);
+
             try {
                 state.sourceLanguage = document.getElementById('source-language').value;
                 
@@ -1417,34 +1694,38 @@
 
         async function stopTranslation() {
             if (state.isProcessing) return;
-            
+
             state.isProcessing = true;
             const button = document.getElementById('translation_toggle');
             const text = button.querySelector('.toggle-text');
-            
+
             button.disabled = true;
             text.textContent = '停止中...';
-            
+
             try {
                 if (state.taskId) {
                     await apiRequest('/interpretation', { TaskId: state.taskId }, 'DELETE');
                 }
-                
+
                 await exitTRTCRoom();
-                
+
                 state.taskId = null;
                 setUIStatus('connection', '未连接');
                 setUIStatus('translation', '待机中');
                 updateStatus('room', 'RTC未连接');
-                
+
                 document.getElementById('subtitle-text-place').value = '';
-                document.getElementById('subtitles-display').innerHTML = 
+                document.getElementById('subtitles-display').innerHTML =
                     `<div class="subtitles-placeholder">选择识别语言和输出语言，然后点击开始翻译</div>`;
-                
+
                 document.getElementById('source-language').disabled = false;
                 document.getElementById('target-languages-btn').disabled = false;
+
+                // 启用场景按钮
+                document.querySelectorAll('.scenario-btn').forEach(btn => btn.disabled = false);
+
                 validateLanguageSelection();
-                
+
             } catch (error) {
                 console.error('停止失败:', error);
                 alert(`停止失败: ${error.message}`);
@@ -1460,13 +1741,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadLanguageOptions();
             initializeDefaultTargetLanguages();
-            
+            initializeScenarios();
+
             document.getElementById('source-language').addEventListener('change', validateLanguageSelection);
             document.getElementById('target-languages-btn').addEventListener('click', openLanguageModal);
             document.getElementById('translation_toggle').addEventListener('click', function() {
                 state.isActive ? stopTranslation() : startTranslation();
             });
-            
+
+            // 监听高级配置变化，自动切换到自定义模式
+            const advancedInputs = document.querySelectorAll('#advanced-config-content input, #advanced-config-content select');
+            advancedInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    if (currentScenario !== 'custom' && !state.isActive) {
+                        applyScenario('custom');
+                    }
+                });
+            });
+
             // 初始化字幕显示
             updateSubtitleDisplay();
 
