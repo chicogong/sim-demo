@@ -40,12 +40,32 @@
             align-items: center;
             padding: 5vh 10vw;
             z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .presentation-subtitle-display.align-left {
+            align-items: flex-start;
+        }
+
+        .presentation-subtitle-display.align-right {
+            align-items: flex-end;
         }
 
         .presentation-subtitle-content {
             text-align: center;
             width: 100%;
             max-width: 1400px;
+            transition: all 0.3s ease;
+        }
+
+        .presentation-subtitle-display.align-left .presentation-subtitle-content {
+            text-align: left;
+            max-width: 60%;
+        }
+
+        .presentation-subtitle-display.align-right .presentation-subtitle-content {
+            text-align: right;
+            max-width: 60%;
         }
 
         .presentation-subtitle-original {
@@ -439,6 +459,10 @@
         <button class="control-btn" onclick="adjustFontSize(-0.5)" title="字体变小">-</button>
         <button class="control-btn" onclick="adjustFontSize(0.5)" title="字体变大">+</button>
         <div class="control-divider"></div>
+        <button class="control-btn" onclick="setAlignment('left')" title="左对齐">◧</button>
+        <button class="control-btn" onclick="setAlignment('center')" title="居中">▣</button>
+        <button class="control-btn" onclick="setAlignment('right')" title="右对齐">◨</button>
+        <div class="control-divider"></div>
         <button class="control-btn primary" id="toggleBtn" onclick="toggleTranslation()" title="开始/停止">▶️</button>
         <div class="control-divider"></div>
         <button class="control-btn" onclick="toggleFullscreen()" title="全屏">⛶</button>
@@ -590,6 +614,18 @@
         function adjustFontSize(delta) {
             state.fontSize = Math.max(0.5, Math.min(2, state.fontSize + delta));
             updateSubtitleDisplay();
+        }
+
+        function setAlignment(align) {
+            const display = document.querySelector('.presentation-subtitle-display');
+            display.classList.remove('align-left', 'align-right');
+
+            if (align === 'left') {
+                display.classList.add('align-left');
+            } else if (align === 'right') {
+                display.classList.add('align-right');
+            }
+            // 'center' 不需要添加类，默认就是居中
         }
 
         function toggleFullscreen() {
@@ -880,6 +916,15 @@
                 } else if (e.code === 'KeyH' && !e.target.matches('input, select')) {
                     e.preventDefault();
                     hideControls();
+                } else if (e.code === 'KeyL' && !e.target.matches('input, select')) {
+                    e.preventDefault();
+                    setAlignment('left');
+                } else if (e.code === 'KeyC' && !e.target.matches('input, select')) {
+                    e.preventDefault();
+                    setAlignment('center');
+                } else if (e.code === 'KeyR' && !e.target.matches('input, select')) {
+                    e.preventDefault();
+                    setAlignment('right');
                 } else if (e.code === 'Escape') {
                     const panel = document.getElementById('settingsPanel');
                     if (panel.classList.contains('show')) {
