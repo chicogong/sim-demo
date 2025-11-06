@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRTC 同声传译 - 演讲模式</title>
+    <link rel="icon" href="src/agent_cards/assets/star.ico" type="image/x-icon">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            height: 100vh;
+            overflow: hidden;
+            color: #fff;
+            cursor: none;
+        }
+
+        body.show-cursor {
+            cursor: default;
+        }
+
+        /* 全屏字幕显示区 */
+        .presentation-subtitle-display {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 5vh 10vw;
+            z-index: 1;
+        }
+
+        .presentation-subtitle-content {
+            text-align: center;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .presentation-subtitle-original {
+            font-size: min(3.5vw, 48px);
+            color: #a8e6cf;
+            font-weight: 500;
+            line-height: 1.5;
+            margin-bottom: 3vh;
+            opacity: 0.9;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .presentation-subtitle-translated {
+            font-size: min(5vw, 72px);
+            color: #ffffff;
+            font-weight: 600;
+            line-height: 1.4;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .presentation-subtitle-placeholder {
+            font-size: min(2.5vw, 32px);
+            color: rgba(255,255,255,0.3);
+            font-weight: 300;
+        }
+
+        /* 状态指示器 - 右上角 */
+        .status-indicator {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-indicator.hidden {
+            opacity: 0;
+        }
+
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.connection.active {
+            background: #10b981;
+            box-shadow: 0 0 16px #10b981;
+        }
+
+        .status-dot.translation.active {
+            background: #3b82f6;
+            box-shadow: 0 0 16px #3b82f6;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* 浮动控制栏 */
+        .floating-controls {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 60px;
+            padding: 16px 24px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .floating-controls.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+            pointer-events: none;
+        }
+
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+
+        .control-btn.primary {
+            width: 56px;
+            height: 56px;
+            background: #667eea;
+        }
+
+        .control-btn.primary:hover {
+            background: #5a67d8;
+        }
+
+        .control-btn.primary.active {
+            background: #ef4444;
+        }
+
+        .control-btn.primary.active:hover {
+            background: #dc2626;
+        }
+
+        .control-divider {
+            width: 1px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* 设置面板 */
+        .settings-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 30, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 24px 24px 0 0;
+            padding: 32px;
+            max-height: 70vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 200;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+        }
+
+        .settings-panel.show {
+            transform: translateY(0);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .settings-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .settings-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .settings-body {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-group label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+
+        .setting-group select,
+        .setting-group input {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 14px;
+        }
+
+        .setting-group select:focus,
+        .setting-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .scene-buttons {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .scene-btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+
+        .scene-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .scene-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        /* 语言选择弹窗 */
+        .language-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .language-modal.show {
+            display: flex;
+        }
+
+        .language-modal-content {
+            background: rgba(30, 30, 46, 0.98);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .language-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .language-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .language-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .language-option {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .language-option:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .language-option.selected {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .language-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .language-modal-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .language-modal-btn.cancel {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .language-modal-btn.confirm {
+            background: #667eea;
+            color: white;
+        }
+
+        /* 隐藏元素 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .settings-body {
+                grid-template-columns: 1fr;
+            }
+
+            .presentation-subtitle-original {
+                font-size: 6vw;
+            }
+
+            .presentation-subtitle-translated {
+                font-size: 8vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 全屏字幕显示 -->
+    <div class="presentation-subtitle-display">
+        <div class="presentation-subtitle-content">
+            <div class="presentation-subtitle-placeholder">点击设置开始使用</div>
+        </div>
+    </div>
+
+    <!-- 状态指示器 -->
+    <div class="status-indicator">
+        <div class="status-dot connection"></div>
+        <div class="status-dot translation"></div>
+    </div>
+
+    <!-- 浮动控制栏 -->
+    <div class="floating-controls">
+        <button class="control-btn" onclick="toggleSettings()" title="设置">⚙️</button>
+        <button class="control-btn" onclick="adjustFontSize(-0.5)" title="字体变小">-</button>
+        <button class="control-btn" onclick="adjustFontSize(0.5)" title="字体变大">+</button>
+        <div class="control-divider"></div>
+        <button class="control-btn primary" id="toggleBtn" onclick="toggleTranslation()" title="开始/停止">▶️</button>
+        <div class="control-divider"></div>
+        <button class="control-btn" onclick="toggleFullscreen()" title="全屏">⛶</button>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <div class="settings-title">翻译设置</div>
+            <button class="settings-close" onclick="toggleSettings()">×</button>
+        </div>
+        <div class="settings-body">
+            <!-- 场景预设 -->
+            <div class="scene-buttons">
+                <button class="scene-btn" data-scene="quiet">安静环境</button>
+                <button class="scene-btn" data-scene="meeting">会议室</button>
+                <button class="scene-btn" data-scene="noisy">嘈杂环境</button>
+                <button class="scene-btn active" data-scene="presentation">演讲模式</button>
+            </div>
+
+            <!-- 语言设置 -->
+            <div class="setting-group">
+                <label>识别语言</label>
+                <select id="source-language">
+                    <option value="">请选择</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>输出语言</label>
+                <input id="target-languages-btn" type="text" readonly placeholder="请选择" style="cursor: pointer;" onclick="openLanguageModal()">
+            </div>
+
+            <!-- 翻译模式 -->
+            <div class="setting-group">
+                <label>翻译模式</label>
+                <select id="translation-mode">
+                    <option value="1">文字</option>
+                    <option value="2" selected>语音</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>音色</label>
+                <select id="voice-type">
+                    <option value="male-qn-qingse">男声-清澈</option>
+                    <option value="Chinese (Mandarin)_IntellectualGirl">女声-知性</option>
+                    <option value="female-tianmei">女声-甜美</option>
+                    <option value="male-qn-daxuesheng-jingpin">男声-精品</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 语言选择弹窗 -->
+    <div id="language-modal" class="language-modal">
+        <div class="language-modal-content">
+            <div class="language-modal-header">
+                <h3 class="language-modal-title">选择输出语言</h3>
+                <button class="language-modal-close" onclick="closeLanguageModal()">×</button>
+            </div>
+            <div id="language-grid" class="language-grid"></div>
+            <div class="language-modal-actions">
+                <button class="language-modal-btn cancel" onclick="closeLanguageModal()">取消</button>
+                <button class="language-modal-btn confirm" onclick="confirmLanguageSelection()">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隐藏的状态元素 -->
+    <div class="hidden">
+        <input id="room_state" type="text" readonly value="RTC未连接"/>
+        <input id="robot_state" type="text" readonly value="Agent未激活"/>
+    </div>
+
+    <script src='https://web.sdk.qcloud.com/trtc/webrtc/v5/dist/trtc.js'></script>
+    <script>
+        // ========== 配置常量 ==========
+        const API_BASE_URL = window.location.origin;
+        const MESSAGE_TYPES = { CONVERSATION: 10000, STATE_CHANGE: 10001, ERROR_CALLBACK: 10030, METRICS_CALLBACK: 10020 };
+        const MAX_TARGET_LANGUAGES = 5;
+
+        // 场景预设
+        const SCENARIO_PRESETS = {
+            quiet: { vadSilenceTime: 800, vadLevel: 0, semanticEagerness: 'medium' },
+            meeting: { vadSilenceTime: 700, vadLevel: 2, semanticEagerness: 'medium' },
+            noisy: { vadSilenceTime: 600, vadLevel: 3, semanticEagerness: 'low' },
+            presentation: { vadSilenceTime: 1200, vadLevel: 2, semanticEagerness: 'high' }
+        };
+
+        // 语言配置
+        const RECOGNITION_LANGUAGES = {
+            "16k_zh_en_caption": "中英caption", "en": "英语", "zh": "中文", "ja": "日语",
+            "ko": "韩语", "vi": "越南语", "id": "印度尼西亚语", "th": "泰语", "pt": "葡萄牙语",
+            "tr": "土耳其语", "ar": "阿拉伯语", "es": "西班牙语", "hi": "印地语",
+            "fr": "法语", "ms": "马来语", "fil": "菲律宾语", "de": "德语",
+            "it": "意大利语", "ru": "俄语"
+        };
+
+        const TRANSLATION_LANGUAGES = {
+            "en": "英语", "zh": "中文", "ja": "日语", "ko": "韩语", "vi": "越南语",
+            "id": "印度尼西亚语", "th": "泰语", "pt": "葡萄牙语", "tr": "土耳其语",
+            "ar": "阿拉伯语", "es": "西班牙语", "hi": "印地语", "fr": "法语",
+            "ms": "马来语", "fil": "菲律宾语", "de": "德语", "it": "意大利语", "ru": "俄语"
+        };
+
+        // ========== 状态管理 ==========
+        const trtcState = { client: null, currentUserId: null, botUserId: null };
+        const state = {
+            taskId: null,
+            sourceLanguage: '',
+            targetLanguages: ['en'],
+            isActive: false,
+            isProcessing: false,
+            currentScenario: 'presentation',
+            fontSize: 1
+        };
+        let selectedLanguages = new Set(['en']);
+        let autoHideTimer = null;
+        let currentOriginalText = '';
+        let currentTranslatedText = '';
+
+        // ========== UI 控制 ==========
+        function showControls() {
+            document.body.classList.add('show-cursor');
+            document.querySelector('.floating-controls').classList.remove('hidden');
+            document.querySelector('.status-indicator').classList.remove('hidden');
+
+            clearTimeout(autoHideTimer);
+            autoHideTimer = setTimeout(hideControls, 3000);
+        }
+
+        function hideControls() {
+            if (!document.querySelector('.settings-panel').classList.contains('show')) {
+                document.body.classList.remove('show-cursor');
+                document.querySelector('.floating-controls').classList.add('hidden');
+            }
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('show');
+            if (panel.classList.contains('show')) {
+                showControls();
+                clearTimeout(autoHideTimer);
+            }
+        }
+
+        function adjustFontSize(delta) {
+            state.fontSize = Math.max(0.5, Math.min(2, state.fontSize + delta));
+            updateSubtitleDisplay();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // ========== 场景切换 ==========
+        function applyScenario(scenario) {
+            state.currentScenario = scenario;
+            document.querySelectorAll('.scene-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.scene === scenario);
+            });
+        }
+
+        // ========== 字幕显示 ==========
+        function updateSubtitleDisplay() {
+            const content = document.querySelector('.presentation-subtitle-content');
+
+            if (currentOriginalText || currentTranslatedText) {
+                content.innerHTML = `
+                    ${currentOriginalText ? `<div class="presentation-subtitle-original" style="font-size: ${3.5 * state.fontSize}vw">${currentOriginalText}</div>` : ''}
+                    ${currentTranslatedText ? `<div class="presentation-subtitle-translated" style="font-size: ${5 * state.fontSize}vw">${currentTranslatedText}</div>` : ''}
+                `;
+            } else {
+                content.innerHTML = '<div class="presentation-subtitle-placeholder">等待语音输入...</div>';
+            }
+        }
+
+        // ========== API 请求 ==========
+        async function apiRequest(endpoint, data, method = "POST") {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) throw new Error(`API error: ${response.status}`);
+            return await response.json();
+        }
+
+        // ========== TRTC 管理 ==========
+        async function enterTRTCRoom(params) {
+            const client = trtcState.client = TRTC.create();
+            await client.enterRoom({
+                roomId: parseInt(params.roomId),
+                scene: "rtc",
+                sdkAppId: params.sdkAppId,
+                userId: params.userId,
+                userSig: params.userSig,
+            });
+
+            client.on(TRTC.EVENT.CUSTOM_MESSAGE, handleTRTCMessage);
+            client.enableAudioVolumeEvaluation(50);
+            await client.startLocalAudio();
+            return client;
+        }
+
+        async function exitTRTCRoom() {
+            if (trtcState.client) {
+                await trtcState.client.exitRoom();
+                trtcState.client.destroy();
+                trtcState.client = null;
+            }
+        }
+
+        function handleTRTCMessage(event) {
+            try {
+                const data = JSON.parse(new TextDecoder().decode(event.data));
+                console.log('Message:', data);
+
+                if (data.type === MESSAGE_TYPES.CONVERSATION) {
+                    const { sender, payload } = data;
+                    const isRobot = sender.includes('ai_');
+
+                    if (isRobot && payload.translation_text) {
+                        currentTranslatedText = payload.translation_text;
+                    } else if (!isRobot) {
+                        currentOriginalText = payload.text;
+                    }
+                    updateSubtitleDisplay();
+                }
+            } catch (error) {
+                console.error('Message error:', error);
+            }
+        }
+
+        // ========== 翻译控制 ==========
+        async function toggleTranslation() {
+            if (state.isActive) {
+                await stopTranslation();
+            } else {
+                await startTranslation();
+            }
+        }
+
+        async function startTranslation() {
+            if (state.isProcessing || !state.sourceLanguage || state.targetLanguages.length === 0) {
+                alert('请先设置识别语言和输出语言');
+                toggleSettings();
+                return;
+            }
+
+            state.isProcessing = true;
+            const btn = document.getElementById('toggleBtn');
+            btn.textContent = '⏳';
+
+            try {
+                const credentials = await apiRequest('/credentials', { agentId: 'default' });
+                const roomId = Math.floor(Math.random() * 10000000) + 1000000;
+
+                const preset = SCENARIO_PRESETS[state.currentScenario];
+
+                const requestBody = {
+                    "SdkAppId": credentials.sdkAppId,
+                    "RoomId": roomId.toString(),
+                    "TranscriptionParams": {
+                        "UserId": credentials.robotId,
+                        "UserSig": credentials.robotSig,
+                        "TranscriptionMode": 0,
+                        "TargetUserId": credentials.userId,
+                        "TurnDetection": { "SemanticEagerness": preset.semanticEagerness }
+                    },
+                    "RecognizeConfig": {
+                        "Language": state.sourceLanguage,
+                        "VadSilenceTime": preset.vadSilenceTime,
+                        "VadLevel": preset.vadLevel
+                    },
+                    "TranslationConfig": {
+                        "Mode": parseInt(document.getElementById('translation-mode').value),
+                        "TargetLanguages": state.targetLanguages,
+                        "TTSConfig": { "VoiceId": document.getElementById('voice-type').value }
+                    }
+                };
+
+                const result = await apiRequest('/interpretation', requestBody);
+                state.taskId = result.TaskId;
+
+                await enterTRTCRoom({
+                    roomId: roomId,
+                    sdkAppId: credentials.sdkAppId,
+                    userId: credentials.userId,
+                    userSig: credentials.userSig
+                });
+
+                btn.classList.add('active');
+                btn.textContent = '⏸️';
+                state.isActive = true;
+
+                document.querySelector('.status-dot.connection').classList.add('active');
+                document.querySelector('.status-dot.translation').classList.add('active');
+
+            } catch (error) {
+                console.error('启动失败:', error);
+                alert(`启动失败: ${error.message}`);
+                btn.textContent = '▶️';
+            } finally {
+                state.isProcessing = false;
+            }
+        }
+
+        async function stopTranslation() {
+            if (state.isProcessing) return;
+
+            state.isProcessing = true;
+            const btn = document.getElementById('toggleBtn');
+            btn.textContent = '⏳';
+
+            try {
+                if (state.taskId) {
+                    await apiRequest('/interpretation', { TaskId: state.taskId }, 'DELETE');
+                }
+
+                await exitTRTCRoom();
+
+                state.taskId = null;
+                btn.classList.remove('active');
+                btn.textContent = '▶️';
+                state.isActive = false;
+
+                document.querySelector('.status-dot.connection').classList.remove('active');
+                document.querySelector('.status-dot.translation').classList.remove('active');
+
+                currentOriginalText = '';
+                currentTranslatedText = '';
+                updateSubtitleDisplay();
+
+            } catch (error) {
+                console.error('停止失败:', error);
+                alert(`停止失败: ${error.message}`);
+            } finally {
+                state.isProcessing = false;
+            }
+        }
+
+        // ========== 语言选择 ==========
+        function openLanguageModal() {
+            document.getElementById('language-modal').classList.add('show');
+        }
+
+        function closeLanguageModal() {
+            document.getElementById('language-modal').classList.remove('show');
+        }
+
+        function confirmLanguageSelection() {
+            if (selectedLanguages.size > MAX_TARGET_LANGUAGES) {
+                alert(`最多选择 ${MAX_TARGET_LANGUAGES} 个语言`);
+                return;
+            }
+            state.targetLanguages = Array.from(selectedLanguages);
+            updateSelectedLanguagesDisplay();
+            closeLanguageModal();
+        }
+
+        function updateSelectedLanguagesDisplay() {
+            const display = document.getElementById('target-languages-btn');
+            if (selectedLanguages.size === 0) {
+                display.value = '请选择';
+            } else {
+                const names = Array.from(selectedLanguages).map(code => TRANSLATION_LANGUAGES[code]);
+                display.value = `已选择: ${names.join(', ')}`;
+            }
+        }
+
+        // ========== 初始化 ==========
+        function initializeLanguages() {
+            // 填充识别语言
+            const sourceSelect = document.getElementById('source-language');
+            Object.entries(RECOGNITION_LANGUAGES).forEach(([code, name]) => {
+                sourceSelect.innerHTML += `<option value="${code}">${name}</option>`;
+            });
+            sourceSelect.value = '16k_zh_en_caption';
+            state.sourceLanguage = '16k_zh_en_caption';
+
+            // 填充输出语言网格
+            const grid = document.getElementById('language-grid');
+            Object.entries(TRANSLATION_LANGUAGES).forEach(([code, name]) => {
+                const option = document.createElement('div');
+                option.className = 'language-option';
+                option.textContent = name;
+                option.onclick = function() {
+                    if (selectedLanguages.has(code)) {
+                        selectedLanguages.delete(code);
+                        option.classList.remove('selected');
+                    } else {
+                        if (selectedLanguages.size >= MAX_TARGET_LANGUAGES) {
+                            alert(`最多选择 ${MAX_TARGET_LANGUAGES} 个语言`);
+                            return;
+                        }
+                        selectedLanguages.add(code);
+                        option.classList.add('selected');
+                    }
+                };
+                if (code === 'en') {
+                    option.classList.add('selected');
+                }
+                grid.appendChild(option);
+            });
+
+            updateSelectedLanguagesDisplay();
+        }
+
+        function initializeSceneButtons() {
+            document.querySelectorAll('.scene-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!state.isActive) {
+                        applyScenario(this.dataset.scene);
+                    }
+                });
+            });
+        }
+
+        function initializeEventListeners() {
+            // 鼠标移动显示控制栏
+            document.addEventListener('mousemove', showControls);
+            document.addEventListener('click', showControls);
+
+            // 键盘快捷键
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && !e.target.matches('input, select')) {
+                    e.preventDefault();
+                    toggleTranslation();
+                } else if (e.code === 'KeyF' && !e.target.matches('input, select')) {
+                    e.preventDefault();
+                    toggleFullscreen();
+                } else if (e.code === 'KeyH' && !e.target.matches('input, select')) {
+                    e.preventDefault();
+                    hideControls();
+                } else if (e.code === 'Escape') {
+                    const panel = document.getElementById('settingsPanel');
+                    if (panel.classList.contains('show')) {
+                        toggleSettings();
+                    }
+                }
+            });
+
+            // 语言变化监听
+            document.getElementById('source-language').addEventListener('change', function() {
+                state.sourceLanguage = this.value;
+            });
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeLanguages();
+            initializeSceneButtons();
+            initializeEventListeners();
+            applyScenario('presentation');
+
+            // 初始显示控制栏
+            showControls();
+
+            console.log('演讲模式已就绪');
+        });
+    </script>
+</body>
+</html>
