@@ -12,6 +12,10 @@
             padding: 0;
         }
 
+        :root {
+            --subtitle-font-scale: 1;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -30,71 +34,78 @@
         /* 全屏字幕显示区 */
         .presentation-subtitle-display {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: grid;
-            grid-template-rows: 1fr 1fr;
-            align-items: center;
-            padding: 8vh 10vw;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
             z-index: 1;
-            gap: 4vh;
-        }
-
-        .presentation-subtitle-display.align-left {
-            padding-left: 5vw;
-            padding-right: 30vw;
-        }
-
-        .presentation-subtitle-display.align-right {
-            padding-left: 30vw;
-            padding-right: 5vw;
         }
 
         .presentation-subtitle-content {
-            display: grid;
-            grid-template-rows: 1fr 1fr;
-            gap: 4vh;
+            position: relative;
             width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
+            height: 100%;
+            display: grid;
+            grid-template-rows: repeat(2, minmax(0, 1fr));
+            gap: clamp(32px, 6vh, 80px);
+            padding: clamp(40px, 8vh, 96px) clamp(56px, 9vw, 140px);
         }
 
-        .presentation-subtitle-display.align-left .presentation-subtitle-content,
+        .presentation-subtitle-display.align-left .presentation-subtitle-content {
+            padding-top: clamp(24px, 4vh, 60px);
+            padding-bottom: clamp(40px, 6vh, 72px);
+            padding-left: clamp(20px, 3vw, 48px);
+            padding-right: clamp(160px, 26vw, 360px);
+            align-content: flex-start;
+            justify-content: flex-start;
+        }
+
         .presentation-subtitle-display.align-right .presentation-subtitle-content {
-            max-width: none;
-            margin: 0;
+            padding-left: clamp(160px, 26vw, 360px);
+            padding-right: clamp(32px, 6vw, 80px);
         }
 
         .subtitle-area {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            padding: 0 3vw;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 20vh;
-            height: 20vh;
             overflow: hidden;
         }
 
         .presentation-subtitle-display.align-left .subtitle-area {
             justify-content: flex-start;
+            align-items: flex-start;
+            padding-top: 0;
         }
 
         .presentation-subtitle-display.align-right .subtitle-area {
             justify-content: flex-end;
         }
 
+        .placeholder-area {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            pointer-events: none;
+            background: transparent;
+            padding: clamp(40px, 8vh, 96px) clamp(56px, 9vw, 140px);
+        }
+
         .presentation-subtitle-original {
-            font-size: 4.5vw;
+            font-size: clamp(calc(28px * var(--subtitle-font-scale)), calc(3.8vw * var(--subtitle-font-scale)), calc(92px * var(--subtitle-font-scale)));
             color: #a8e6cf;
             font-weight: 500;
-            line-height: 1.5;
+            line-height: 1.35;
             opacity: 0.9;
             text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            transition: opacity 0.3s ease, transform 0.2s ease;
+            transition: opacity 0.3s ease;
             text-align: center;
-            transform-origin: center;
-            will-change: transform;
             max-width: 100%;
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -109,15 +120,13 @@
         }
 
         .presentation-subtitle-translated {
-            font-size: 6vw;
+            font-size: clamp(calc(32px * var(--subtitle-font-scale)), calc(5vw * var(--subtitle-font-scale)), calc(128px * var(--subtitle-font-scale)));
             color: #ffffff;
             font-weight: 600;
-            line-height: 1.4;
+            line-height: 1.3;
             text-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            transition: opacity 0.3s ease, transform 0.2s ease;
+            transition: opacity 0.3s ease;
             text-align: center;
-            transform-origin: center;
-            will-change: transform;
             max-width: 100%;
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -127,53 +136,28 @@
             text-align: left;
         }
 
+        .presentation-subtitle-display.align-left .placeholder-area {
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding-top: clamp(24px, 4vh, 60px);
+            padding-bottom: clamp(40px, 6vh, 72px);
+            padding-left: clamp(20px, 3vw, 48px);
+            padding-right: clamp(160px, 26vw, 360px);
+        }
+
         .presentation-subtitle-display.align-right .presentation-subtitle-translated {
             text-align: right;
         }
 
         .presentation-subtitle-placeholder {
-            font-size: 3vw;
+            font-size: clamp(calc(24px * var(--subtitle-font-scale)), calc(3vw * var(--subtitle-font-scale)), calc(64px * var(--subtitle-font-scale)));
             color: rgba(255,255,255,0.3);
             font-weight: 300;
             text-align: center;
         }
 
-        /* 字体缩放类 */
-        .subtitle-area.scale-small .presentation-subtitle-original,
-        .subtitle-area.scale-small .presentation-subtitle-translated {
-            transform: scale(0.75);
-        }
-
-        .subtitle-area.scale-large .presentation-subtitle-original,
-        .subtitle-area.scale-large .presentation-subtitle-translated {
-            transform: scale(1.25);
-        }
-
-        .subtitle-area.scale-xlarge .presentation-subtitle-original,
-        .subtitle-area.scale-xlarge .presentation-subtitle-translated {
-            transform: scale(1.5);
-        }
-
-        /* 响应式字体大小 */
-        @media (min-width: 1920px) {
-            .presentation-subtitle-original {
-                font-size: 86px;
-            }
-            .presentation-subtitle-translated {
-                font-size: 115px;
-            }
-            .presentation-subtitle-placeholder {
-                font-size: 58px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .presentation-subtitle-original {
-                font-size: 7vw;
-            }
-            .presentation-subtitle-translated {
-                font-size: 9vw;
-            }
+        .presentation-subtitle-display.align-left .presentation-subtitle-placeholder {
+            text-align: left;
         }
 
         /* 状态指示器 - 右上角 */
@@ -546,14 +530,6 @@
             .settings-body {
                 grid-template-columns: 1fr;
             }
-
-            .presentation-subtitle-original {
-                font-size: 6vw;
-            }
-
-            .presentation-subtitle-translated {
-                font-size: 8vw;
-            }
         }
     </style>
 </head>
@@ -567,7 +543,7 @@
             <div class="subtitle-area" id="translatedArea">
                 <div class="presentation-subtitle-translated" id="translatedText"></div>
             </div>
-            <div class="subtitle-area" id="placeholderArea" style="grid-row: 1 / -1; display: flex;">
+            <div class="placeholder-area" id="placeholderArea">
                 <div class="presentation-subtitle-placeholder">点击设置开始使用</div>
             </div>
         </div>
@@ -749,9 +725,13 @@
             }
         }
 
+        function applyFontScale() {
+            document.documentElement.style.setProperty('--subtitle-font-scale', state.fontSize.toString());
+        }
+
         function adjustFontSize(delta) {
             state.fontSize = Math.max(0.5, Math.min(2, state.fontSize + delta));
-            updateSubtitleDisplay();
+            applyFontScale();
         }
 
         function setAlignment(align) {
@@ -790,29 +770,19 @@
             const translatedArea = document.getElementById('translatedArea');
             const placeholderArea = document.getElementById('placeholderArea');
 
-            // 更新字体缩放类
-            const scaleClass = state.fontSize <= 0.75 ? 'scale-small' :
-                              state.fontSize >= 1.5 ? 'scale-xlarge' :
-                              state.fontSize >= 1.25 ? 'scale-large' : '';
-
-            originalArea.className = 'subtitle-area ' + scaleClass;
-            translatedArea.className = 'subtitle-area ' + scaleClass;
-
-            // 只更新文本内容，不重建DOM
             if (!currentOriginalText && !currentTranslatedText) {
-                // 显示占位符
                 placeholderArea.style.display = 'flex';
                 originalArea.style.display = 'none';
                 translatedArea.style.display = 'none';
-            } else {
-                // 显示字幕
-                placeholderArea.style.display = 'none';
-                originalArea.style.display = 'flex';
-                translatedArea.style.display = 'flex';
-
-                originalText.textContent = currentOriginalText || '';
-                translatedText.textContent = currentTranslatedText || '';
+                return;
             }
+
+            placeholderArea.style.display = 'none';
+            originalArea.style.display = 'flex';
+            translatedArea.style.display = 'flex';
+
+            originalText.textContent = currentOriginalText || '';
+            translatedText.textContent = currentTranslatedText || '';
         }
 
         // ========== API 请求 ==========
@@ -916,7 +886,8 @@
                     "TranslationConfig": {
                         "Mode": parseInt(document.getElementById('translation-mode').value),
                         "TargetLanguages": state.targetLanguages,
-                        "TTSConfig": { "VoiceId": document.getElementById('voice-type').value }
+                        "TTSConfig": { "VoiceId": document.getElementById('voice-type').value,  "Model": "flow_01_ex" },
+                       
                     }
                 };
 
@@ -1074,6 +1045,8 @@
             initializeSceneButtons();
             initializeEventListeners();
             applyScenario('presentation');
+            applyFontScale();
+            updateSubtitleDisplay();
 
             // 设置默认左对齐
             setAlignment('left');
