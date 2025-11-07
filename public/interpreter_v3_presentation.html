@@ -34,64 +34,146 @@
             left: 0;
             right: 0;
             bottom: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            display: grid;
+            grid-template-rows: 1fr 1fr;
             align-items: center;
-            padding: 5vh 10vw;
+            padding: 8vh 10vw;
             z-index: 1;
-            transition: all 0.3s ease;
+            gap: 4vh;
         }
 
         .presentation-subtitle-display.align-left {
-            align-items: flex-start;
+            padding-left: 5vw;
+            padding-right: 30vw;
         }
 
         .presentation-subtitle-display.align-right {
-            align-items: flex-end;
+            padding-left: 30vw;
+            padding-right: 5vw;
         }
 
         .presentation-subtitle-content {
-            text-align: center;
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 4vh;
             width: 100%;
             max-width: 1400px;
-            transition: all 0.3s ease;
+            margin: 0 auto;
         }
 
-        .presentation-subtitle-display.align-left .presentation-subtitle-content {
-            text-align: left;
-            max-width: 60%;
-        }
-
+        .presentation-subtitle-display.align-left .presentation-subtitle-content,
         .presentation-subtitle-display.align-right .presentation-subtitle-content {
-            text-align: right;
-            max-width: 60%;
+            max-width: none;
+            margin: 0;
+        }
+
+        .subtitle-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 20vh;
+            height: 20vh;
+            overflow: hidden;
+        }
+
+        .presentation-subtitle-display.align-left .subtitle-area {
+            justify-content: flex-start;
+        }
+
+        .presentation-subtitle-display.align-right .subtitle-area {
+            justify-content: flex-end;
         }
 
         .presentation-subtitle-original {
-            font-size: min(3.5vw, 48px);
+            font-size: 4.5vw;
             color: #a8e6cf;
             font-weight: 500;
             line-height: 1.5;
-            margin-bottom: 3vh;
             opacity: 0.9;
             text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+            text-align: center;
+            transform-origin: center;
+            will-change: transform;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .presentation-subtitle-display.align-left .presentation-subtitle-original {
+            text-align: left;
+        }
+
+        .presentation-subtitle-display.align-right .presentation-subtitle-original {
+            text-align: right;
         }
 
         .presentation-subtitle-translated {
-            font-size: min(5vw, 72px);
+            font-size: 6vw;
             color: #ffffff;
             font-weight: 600;
             line-height: 1.4;
             text-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+            text-align: center;
+            transform-origin: center;
+            will-change: transform;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .presentation-subtitle-display.align-left .presentation-subtitle-translated {
+            text-align: left;
+        }
+
+        .presentation-subtitle-display.align-right .presentation-subtitle-translated {
+            text-align: right;
         }
 
         .presentation-subtitle-placeholder {
-            font-size: min(2.5vw, 32px);
+            font-size: 3vw;
             color: rgba(255,255,255,0.3);
             font-weight: 300;
+            text-align: center;
+        }
+
+        /* 字体缩放类 */
+        .subtitle-area.scale-small .presentation-subtitle-original,
+        .subtitle-area.scale-small .presentation-subtitle-translated {
+            transform: scale(0.75);
+        }
+
+        .subtitle-area.scale-large .presentation-subtitle-original,
+        .subtitle-area.scale-large .presentation-subtitle-translated {
+            transform: scale(1.25);
+        }
+
+        .subtitle-area.scale-xlarge .presentation-subtitle-original,
+        .subtitle-area.scale-xlarge .presentation-subtitle-translated {
+            transform: scale(1.5);
+        }
+
+        /* 响应式字体大小 */
+        @media (min-width: 1920px) {
+            .presentation-subtitle-original {
+                font-size: 86px;
+            }
+            .presentation-subtitle-translated {
+                font-size: 115px;
+            }
+            .presentation-subtitle-placeholder {
+                font-size: 58px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .presentation-subtitle-original {
+                font-size: 7vw;
+            }
+            .presentation-subtitle-translated {
+                font-size: 9vw;
+            }
         }
 
         /* 状态指示器 - 右上角 */
@@ -133,6 +215,11 @@
             50% { opacity: 0.4; }
         }
 
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         /* 浮动控制栏 */
         .floating-controls {
             position: fixed;
@@ -159,8 +246,8 @@
         }
 
         .control-btn {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             border: none;
             background: rgba(255,255,255,0.1);
@@ -170,18 +257,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            position: relative;
         }
 
         .control-btn:hover {
             background: rgba(255,255,255,0.2);
-            transform: scale(1.1);
+            transform: scale(1.05);
+        }
+
+        .control-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
         }
 
         .control-btn.primary {
-            width: 56px;
-            height: 56px;
+            width: 54px;
+            height: 54px;
             background: #667eea;
+        }
+
+        .control-btn.primary svg {
+            width: 24px;
+            height: 24px;
         }
 
         .control-btn.primary:hover {
@@ -194,6 +294,24 @@
 
         .control-btn.primary.active:hover {
             background: #dc2626;
+        }
+
+        /* 播放/暂停图标 */
+        .icon-play {
+            width: 0;
+            height: 0;
+            border-left: 10px solid white;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            margin-left: 3px;
+        }
+
+        .icon-pause {
+            width: 12px;
+            height: 16px;
+            border-left: 4px solid white;
+            border-right: 4px solid white;
+            box-sizing: border-box;
         }
 
         .control-divider {
@@ -443,7 +561,15 @@
     <!-- 全屏字幕显示 -->
     <div class="presentation-subtitle-display">
         <div class="presentation-subtitle-content">
-            <div class="presentation-subtitle-placeholder">点击设置开始使用</div>
+            <div class="subtitle-area" id="originalArea">
+                <div class="presentation-subtitle-original" id="originalText"></div>
+            </div>
+            <div class="subtitle-area" id="translatedArea">
+                <div class="presentation-subtitle-translated" id="translatedText"></div>
+            </div>
+            <div class="subtitle-area" id="placeholderArea" style="grid-row: 1 / -1; display: flex;">
+                <div class="presentation-subtitle-placeholder">点击设置开始使用</div>
+            </div>
         </div>
     </div>
 
@@ -455,17 +581,29 @@
 
     <!-- 浮动控制栏 -->
     <div class="floating-controls">
-        <button class="control-btn" onclick="toggleSettings()" title="设置">⚙️</button>
-        <button class="control-btn" onclick="adjustFontSize(-0.5)" title="字体变小">-</button>
-        <button class="control-btn" onclick="adjustFontSize(0.5)" title="字体变大">+</button>
+        <button class="control-btn" onclick="toggleSettings()" title="设置">
+            <svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z"/></svg>
+        </button>
+        <button class="control-btn" onclick="adjustFontSize(-0.5)" title="字体变小">A-</button>
+        <button class="control-btn" onclick="adjustFontSize(0.5)" title="字体变大">A+</button>
         <div class="control-divider"></div>
-        <button class="control-btn" onclick="setAlignment('left')" title="左对齐">◧</button>
-        <button class="control-btn" onclick="setAlignment('center')" title="居中">▣</button>
-        <button class="control-btn" onclick="setAlignment('right')" title="右对齐">◨</button>
+        <button class="control-btn" onclick="setAlignment('left')" title="左对齐">
+            <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3V3m0 4h12v2H3V7m0 4h18v2H3v-2m0 4h12v2H3v-2m0 4h18v2H3v-2z"/></svg>
+        </button>
+        <button class="control-btn" onclick="setAlignment('center')" title="居中">
+            <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3V3m3 4h12v2H6V7m-3 4h18v2H3v-2m3 4h12v2H6v-2m-3 4h18v2H3v-2z"/></svg>
+        </button>
+        <button class="control-btn" onclick="setAlignment('right')" title="右对齐">
+            <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3V3m6 4h12v2H9V7m-6 4h18v2H3v-2m6 4h12v2H9v-2m-6 4h18v2H3v-2z"/></svg>
+        </button>
         <div class="control-divider"></div>
-        <button class="control-btn primary" id="toggleBtn" onclick="toggleTranslation()" title="开始/停止">▶️</button>
+        <button class="control-btn primary" id="toggleBtn" onclick="toggleTranslation()" title="开始/停止">
+            <div class="icon-play"></div>
+        </button>
         <div class="control-divider"></div>
-        <button class="control-btn" onclick="toggleFullscreen()" title="全屏">⛶</button>
+        <button class="control-btn" onclick="toggleFullscreen()" title="全屏">
+            <svg viewBox="0 0 24 24"><path d="M5 5h5v2H7v3H5V5m9 0h5v5h-2V7h-3V5m3 9h2v5h-5v-2h3v-3m-7 3v2H5v-5h2v3h3z"/></svg>
+        </button>
     </div>
 
     <!-- 设置面板 -->
@@ -646,15 +784,34 @@
 
         // ========== 字幕显示 ==========
         function updateSubtitleDisplay() {
-            const content = document.querySelector('.presentation-subtitle-content');
+            const originalText = document.getElementById('originalText');
+            const translatedText = document.getElementById('translatedText');
+            const originalArea = document.getElementById('originalArea');
+            const translatedArea = document.getElementById('translatedArea');
+            const placeholderArea = document.getElementById('placeholderArea');
 
-            if (currentOriginalText || currentTranslatedText) {
-                content.innerHTML = `
-                    ${currentOriginalText ? `<div class="presentation-subtitle-original" style="font-size: ${3.5 * state.fontSize}vw">${currentOriginalText}</div>` : ''}
-                    ${currentTranslatedText ? `<div class="presentation-subtitle-translated" style="font-size: ${5 * state.fontSize}vw">${currentTranslatedText}</div>` : ''}
-                `;
+            // 更新字体缩放类
+            const scaleClass = state.fontSize <= 0.75 ? 'scale-small' :
+                              state.fontSize >= 1.5 ? 'scale-xlarge' :
+                              state.fontSize >= 1.25 ? 'scale-large' : '';
+
+            originalArea.className = 'subtitle-area ' + scaleClass;
+            translatedArea.className = 'subtitle-area ' + scaleClass;
+
+            // 只更新文本内容，不重建DOM
+            if (!currentOriginalText && !currentTranslatedText) {
+                // 显示占位符
+                placeholderArea.style.display = 'flex';
+                originalArea.style.display = 'none';
+                translatedArea.style.display = 'none';
             } else {
-                content.innerHTML = '<div class="presentation-subtitle-placeholder">等待语音输入...</div>';
+                // 显示字幕
+                placeholderArea.style.display = 'none';
+                originalArea.style.display = 'flex';
+                translatedArea.style.display = 'flex';
+
+                originalText.textContent = currentOriginalText || '';
+                translatedText.textContent = currentTranslatedText || '';
             }
         }
 
@@ -733,7 +890,7 @@
 
             state.isProcessing = true;
             const btn = document.getElementById('toggleBtn');
-            btn.textContent = '⏳';
+            btn.innerHTML = '<div style="width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>';
 
             try {
                 const credentials = await apiRequest('/credentials', { agentId: 'default' });
@@ -774,7 +931,7 @@
                 });
 
                 btn.classList.add('active');
-                btn.textContent = '⏸️';
+                btn.innerHTML = '<div class="icon-pause"></div>';
                 state.isActive = true;
 
                 document.querySelector('.status-dot.connection').classList.add('active');
@@ -783,7 +940,7 @@
             } catch (error) {
                 console.error('启动失败:', error);
                 alert(`启动失败: ${error.message}`);
-                btn.textContent = '▶️';
+                btn.innerHTML = '<div class="icon-play"></div>';
             } finally {
                 state.isProcessing = false;
             }
@@ -794,7 +951,7 @@
 
             state.isProcessing = true;
             const btn = document.getElementById('toggleBtn');
-            btn.textContent = '⏳';
+            btn.innerHTML = '<div style="width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>';
 
             try {
                 if (state.taskId) {
@@ -805,7 +962,7 @@
 
                 state.taskId = null;
                 btn.classList.remove('active');
-                btn.textContent = '▶️';
+                btn.innerHTML = '<div class="icon-play"></div>';
                 state.isActive = false;
 
                 document.querySelector('.status-dot.connection').classList.remove('active');
@@ -905,34 +1062,6 @@
             document.addEventListener('mousemove', showControls);
             document.addEventListener('click', showControls);
 
-            // 键盘快捷键
-            document.addEventListener('keydown', (e) => {
-                if (e.code === 'Space' && !e.target.matches('input, select')) {
-                    e.preventDefault();
-                    toggleTranslation();
-                } else if (e.code === 'KeyF' && !e.target.matches('input, select')) {
-                    e.preventDefault();
-                    toggleFullscreen();
-                } else if (e.code === 'KeyH' && !e.target.matches('input, select')) {
-                    e.preventDefault();
-                    hideControls();
-                } else if (e.code === 'KeyL' && !e.target.matches('input, select')) {
-                    e.preventDefault();
-                    setAlignment('left');
-                } else if (e.code === 'KeyC' && !e.target.matches('input, select')) {
-                    e.preventDefault();
-                    setAlignment('center');
-                } else if (e.code === 'KeyR' && !e.target.matches('input, select')) {
-                    e.preventDefault();
-                    setAlignment('right');
-                } else if (e.code === 'Escape') {
-                    const panel = document.getElementById('settingsPanel');
-                    if (panel.classList.contains('show')) {
-                        toggleSettings();
-                    }
-                }
-            });
-
             // 语言变化监听
             document.getElementById('source-language').addEventListener('change', function() {
                 state.sourceLanguage = this.value;
@@ -945,6 +1074,9 @@
             initializeSceneButtons();
             initializeEventListeners();
             applyScenario('presentation');
+
+            // 设置默认左对齐
+            setAlignment('left');
 
             // 初始显示控制栏
             showControls();
