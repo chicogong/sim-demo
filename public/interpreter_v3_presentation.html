@@ -280,6 +280,11 @@
             background: #dc2626;
         }
 
+        .control-btn.pip-active {
+            background: rgba(102, 126, 234, 0.3);
+            border: 2px solid #667eea;
+        }
+
         /* 播放/暂停图标 */
         .icon-play {
             width: 0;
@@ -577,6 +582,9 @@
             <div class="icon-play"></div>
         </button>
         <div class="control-divider"></div>
+        <button class="control-btn" id="pipBtn" onclick="togglePictureInPicture()" title="画中画悬浮窗" style="display: none;">
+            <svg viewBox="0 0 24 24"><path d="M19 7h-8v6h8V7m2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.99 2 1.99h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/></svg>
+        </button>
         <button class="control-btn" onclick="toggleFullscreen()" title="全屏">
             <svg viewBox="0 0 24 24"><path d="M5 5h5v2H7v3H5V5m9 0h5v5h-2V7h-3V5m3 9h2v5h-5v-2h3v-3m-7 3v2H5v-5h2v3h3z"/></svg>
         </button>
@@ -698,6 +706,7 @@
         let autoHideTimer = null;
         let currentOriginalText = '';
         let currentTranslatedText = '';
+        let pipWindow = null;
 
         // ========== UI 控制 ==========
         function showControls() {
@@ -727,6 +736,11 @@
 
         function applyFontScale() {
             document.documentElement.style.setProperty('--subtitle-font-scale', state.fontSize.toString());
+
+            // 同步到画中画窗口
+            if (pipWindow && pipWindow.document) {
+                pipWindow.document.documentElement.style.setProperty('--subtitle-font-scale', state.fontSize.toString());
+            }
         }
 
         function adjustFontSize(delta) {
@@ -754,6 +768,95 @@
             }
         }
 
+        // ========== 画中画功能 ==========
+        async function togglePictureInPicture() {
+            if (pipWindow) {
+                closePictureInPicture();
+            } else {
+                await openPictureInPicture();
+            }
+        }
+
+        async function openPictureInPicture() {
+            try {
+                if (!('documentPictureInPicture' in window)) {
+                    alert('您的浏览器不支持画中画功能，请使用 Chrome 116+ 或 Edge 116+');
+                    return;
+                }
+
+                pipWindow = await documentPictureInPicture.requestWindow({
+                    width: 800,
+                    height: 450,
+                    disallowReturnToOpener: false
+                });
+
+                // 复制所有样式到画中画窗口
+                const allStyles = [...document.styleSheets].map(styleSheet => {
+                    try {
+                        return [...styleSheet.cssRules].map(rule => rule.cssText).join('\n');
+                    } catch (e) {
+                        return '';
+                    }
+                }).join('\n');
+
+                const style = pipWindow.document.createElement('style');
+                style.textContent = allStyles;
+                pipWindow.document.head.appendChild(style);
+
+                // 创建字幕容器
+                pipWindow.document.body.style.margin = '0';
+                pipWindow.document.body.style.padding = '0';
+                pipWindow.document.body.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+                pipWindow.document.body.style.overflow = 'hidden';
+
+                const container = pipWindow.document.createElement('div');
+                container.className = 'presentation-subtitle-display align-left';
+                container.id = 'pip-subtitle-container';
+                container.innerHTML = `
+                    <div class="presentation-subtitle-content">
+                        <div class="subtitle-area" id="pip-originalArea">
+                            <div class="presentation-subtitle-original" id="pip-originalText">${currentOriginalText || ''}</div>
+                        </div>
+                        <div class="subtitle-area" id="pip-translatedArea">
+                            <div class="presentation-subtitle-translated" id="pip-translatedText">${currentTranslatedText || ''}</div>
+                        </div>
+                        <div class="placeholder-area" id="pip-placeholderArea" style="${currentOriginalText || currentTranslatedText ? 'display: none;' : 'display: flex;'}">
+                            <div class="presentation-subtitle-placeholder">等待语音输入...</div>
+                        </div>
+                    </div>
+                `;
+                pipWindow.document.body.appendChild(container);
+
+                // 应用字体缩放
+                pipWindow.document.documentElement.style.setProperty('--subtitle-font-scale', state.fontSize.toString());
+
+                // 监听窗口关闭
+                pipWindow.addEventListener('pagehide', () => {
+                    pipWindow = null;
+                    const btn = document.getElementById('pipBtn');
+                    if (btn) btn.classList.remove('pip-active');
+                });
+
+                // 更新按钮状态
+                const btn = document.getElementById('pipBtn');
+                if (btn) btn.classList.add('pip-active');
+
+                console.log('画中画窗口已打开');
+            } catch (error) {
+                console.error('打开画中画失败:', error);
+                alert('打开画中画失败: ' + error.message);
+            }
+        }
+
+        function closePictureInPicture() {
+            if (pipWindow) {
+                pipWindow.close();
+                pipWindow = null;
+                const btn = document.getElementById('pipBtn');
+                if (btn) btn.classList.remove('pip-active');
+            }
+        }
+
         // ========== 场景切换 ==========
         function applyScenario(scenario) {
             state.currentScenario = scenario;
@@ -764,6 +867,7 @@
 
         // ========== 字幕显示 ==========
         function updateSubtitleDisplay() {
+            // 更新主窗口
             const originalText = document.getElementById('originalText');
             const translatedText = document.getElementById('translatedText');
             const originalArea = document.getElementById('originalArea');
@@ -774,15 +878,38 @@
                 placeholderArea.style.display = 'flex';
                 originalArea.style.display = 'none';
                 translatedArea.style.display = 'none';
-                return;
+            } else {
+                placeholderArea.style.display = 'none';
+                originalArea.style.display = 'flex';
+                translatedArea.style.display = 'flex';
+
+                originalText.textContent = currentOriginalText || '';
+                translatedText.textContent = currentTranslatedText || '';
             }
 
-            placeholderArea.style.display = 'none';
-            originalArea.style.display = 'flex';
-            translatedArea.style.display = 'flex';
+            // 同步更新画中画窗口
+            if (pipWindow && pipWindow.document) {
+                const pipOriginalText = pipWindow.document.getElementById('pip-originalText');
+                const pipTranslatedText = pipWindow.document.getElementById('pip-translatedText');
+                const pipOriginalArea = pipWindow.document.getElementById('pip-originalArea');
+                const pipTranslatedArea = pipWindow.document.getElementById('pip-translatedArea');
+                const pipPlaceholderArea = pipWindow.document.getElementById('pip-placeholderArea');
 
-            originalText.textContent = currentOriginalText || '';
-            translatedText.textContent = currentTranslatedText || '';
+                if (pipOriginalText && pipTranslatedText && pipPlaceholderArea) {
+                    if (!currentOriginalText && !currentTranslatedText) {
+                        pipPlaceholderArea.style.display = 'flex';
+                        if (pipOriginalArea) pipOriginalArea.style.display = 'none';
+                        if (pipTranslatedArea) pipTranslatedArea.style.display = 'none';
+                    } else {
+                        pipPlaceholderArea.style.display = 'none';
+                        if (pipOriginalArea) pipOriginalArea.style.display = 'flex';
+                        if (pipTranslatedArea) pipTranslatedArea.style.display = 'flex';
+
+                        pipOriginalText.textContent = currentOriginalText || '';
+                        pipTranslatedText.textContent = currentTranslatedText || '';
+                    }
+                }
+            }
         }
 
         // ========== API 请求 ==========
@@ -1050,6 +1177,17 @@
 
             // 设置默认左对齐
             setAlignment('left');
+
+            // 检测画中画支持
+            if ('documentPictureInPicture' in window) {
+                const pipBtn = document.getElementById('pipBtn');
+                if (pipBtn) {
+                    pipBtn.style.display = 'flex';
+                }
+                console.log('画中画功能可用');
+            } else {
+                console.log('浏览器不支持画中画功能');
+            }
 
             // 初始显示控制栏
             showControls();
