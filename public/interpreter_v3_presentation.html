@@ -309,6 +309,76 @@
             background: rgba(255,255,255,0.2);
         }
 
+        /* 导出菜单 */
+        .export-menu {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 46, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 200px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 99;
+            animation: slideUp 0.2s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .export-menu-header {
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .export-menu-item {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            text-align: left;
+            border-radius: 6px;
+            margin: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-menu-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .export-menu-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 8px 0;
+        }
+
+        .export-menu-info {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            text-align: center;
+        }
+
         /* 设置面板 */
         .settings-panel {
             position: fixed;
@@ -585,9 +655,31 @@
         <button class="control-btn" id="pipBtn" onclick="togglePictureInPicture()" title="画中画悬浮窗" style="display: none;">
             <svg viewBox="0 0 24 24"><path d="M19 7h-8v6h8V7m2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.99 2 1.99h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/></svg>
         </button>
+        <button class="control-btn" id="exportBtn" onclick="toggleExportMenu()" title="导出字幕">
+            <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
+        </button>
         <button class="control-btn" onclick="toggleFullscreen()" title="全屏">
             <svg viewBox="0 0 24 24"><path d="M5 5h5v2H7v3H5V5m9 0h5v5h-2V7h-3V5m3 9h2v5h-5v-2h3v-3m-7 3v2H5v-5h2v3h3z"/></svg>
         </button>
+    </div>
+
+    <!-- 导出菜单 -->
+    <div class="export-menu" id="exportMenu" style="display: none;">
+        <div class="export-menu-header">导出字幕</div>
+        <button class="export-menu-item" onclick="exportSubtitles('srt')">
+            <span>📄 SRT (视频字幕)</span>
+        </button>
+        <button class="export-menu-item" onclick="exportSubtitles('vtt')">
+            <span>📄 VTT (Web字幕)</span>
+        </button>
+        <button class="export-menu-item" onclick="exportSubtitles('txt')">
+            <span>📝 TXT (纯文本)</span>
+        </button>
+        <button class="export-menu-item" onclick="exportSubtitles('json')">
+            <span>📊 JSON (完整数据)</span>
+        </button>
+        <div class="export-menu-divider"></div>
+        <div class="export-menu-info" id="exportInfo">暂无字幕记录</div>
     </div>
 
     <!-- 设置面板 -->
@@ -707,6 +799,10 @@
         let currentOriginalText = '';
         let currentTranslatedText = '';
         let pipWindow = null;
+
+        // 字幕历史记录
+        let subtitleHistory = [];
+        let sessionStartTime = null;
 
         // ========== UI 控制 ==========
         function showControls() {
@@ -857,6 +953,178 @@
             }
         }
 
+        // ========== 字幕导出功能 ==========
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+                updateExportInfo();
+                showControls();
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        function updateExportInfo() {
+            const info = document.getElementById('exportInfo');
+            if (subtitleHistory.length === 0) {
+                info.textContent = '暂无字幕记录';
+            } else {
+                info.textContent = `共 ${subtitleHistory.length} 条字幕`;
+            }
+        }
+
+        function exportSubtitles(format) {
+            if (subtitleHistory.length === 0) {
+                alert('暂无字幕可导出');
+                return;
+            }
+
+            let content = '';
+            let filename = '';
+            let mimeType = '';
+
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10);
+            const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '-');
+
+            switch (format) {
+                case 'srt':
+                    content = generateSRT();
+                    filename = `subtitle_${dateStr}_${timeStr}.srt`;
+                    mimeType = 'text/plain;charset=utf-8';
+                    break;
+                case 'vtt':
+                    content = generateVTT();
+                    filename = `subtitle_${dateStr}_${timeStr}.vtt`;
+                    mimeType = 'text/vtt;charset=utf-8';
+                    break;
+                case 'txt':
+                    content = generateTXT();
+                    filename = `subtitle_${dateStr}_${timeStr}.txt`;
+                    mimeType = 'text/plain;charset=utf-8';
+                    break;
+                case 'json':
+                    content = generateJSON();
+                    filename = `subtitle_${dateStr}_${timeStr}.json`;
+                    mimeType = 'application/json;charset=utf-8';
+                    break;
+            }
+
+            // 创建并下载文件
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // 关闭菜单
+            toggleExportMenu();
+
+            console.log(`导出成功: ${filename}`);
+        }
+
+        function generateSRT() {
+            let srt = '';
+            const startTime = subtitleHistory[0]?.time || Date.now();
+
+            subtitleHistory.forEach((entry, index) => {
+                const relativeTime = entry.time - startTime;
+                const startSeconds = Math.floor(relativeTime / 1000);
+                const endSeconds = startSeconds + 5; // 默认每条字幕显示5秒
+
+                srt += `${index + 1}\n`;
+                srt += `${formatSRTTime(startSeconds)} --> ${formatSRTTime(endSeconds)}\n`;
+                if (entry.original) srt += `${entry.original}\n`;
+                if (entry.translated) srt += `${entry.translated}\n`;
+                srt += '\n';
+            });
+
+            return srt;
+        }
+
+        function formatSRTTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            const ms = 0;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
+        }
+
+        function generateVTT() {
+            let vtt = 'WEBVTT\n\n';
+            const startTime = subtitleHistory[0]?.time || Date.now();
+
+            subtitleHistory.forEach((entry, index) => {
+                const relativeTime = entry.time - startTime;
+                const startSeconds = Math.floor(relativeTime / 1000);
+                const endSeconds = startSeconds + 5;
+
+                vtt += `${formatVTTTime(startSeconds)} --> ${formatVTTTime(endSeconds)}\n`;
+                if (entry.original) vtt += `${entry.original}\n`;
+                if (entry.translated) vtt += `${entry.translated}\n`;
+                vtt += '\n';
+            });
+
+            return vtt;
+        }
+
+        function formatVTTTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            const ms = 0;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+        }
+
+        function generateTXT() {
+            let txt = '同声传译字幕记录\n';
+            txt += '='.repeat(50) + '\n';
+            txt += `导出时间: ${new Date().toLocaleString('zh-CN')}\n`;
+            txt += `字幕数量: ${subtitleHistory.length} 条\n`;
+            txt += '='.repeat(50) + '\n\n';
+
+            subtitleHistory.forEach((entry, index) => {
+                txt += `[${entry.timestamp}]\n`;
+                if (entry.original) txt += `原文: ${entry.original}\n`;
+                if (entry.translated) txt += `译文: ${entry.translated}\n`;
+                txt += '\n';
+            });
+
+            return txt;
+        }
+
+        function generateJSON() {
+            const sessionEnd = new Date();
+            const data = {
+                sessionInfo: {
+                    startTime: sessionStartTime ? new Date(sessionStartTime).toISOString() : null,
+                    endTime: sessionEnd.toISOString(),
+                    sourceLanguage: state.sourceLanguage,
+                    targetLanguages: state.targetLanguages,
+                    totalEntries: subtitleHistory.length,
+                    scenario: state.currentScenario
+                },
+                subtitles: subtitleHistory.map(entry => ({
+                    timestamp: entry.timestamp,
+                    original: {
+                        text: entry.original,
+                        language: entry.sourceLanguage
+                    },
+                    translated: {
+                        text: entry.translated,
+                        language: entry.targetLanguage
+                    }
+                }))
+            };
+
+            return JSON.stringify(data, null, 2);
+        }
+
         // ========== 场景切换 ==========
         function applyScenario(scenario) {
             state.currentScenario = scenario;
@@ -867,6 +1135,32 @@
 
         // ========== 字幕显示 ==========
         function updateSubtitleDisplay() {
+            // 保存到历史记录
+            if (currentOriginalText || currentTranslatedText) {
+                const now = new Date();
+                const timestamp = now.toLocaleString('zh-CN', { hour12: false });
+
+                // 避免重复添加相同的字幕
+                const lastEntry = subtitleHistory[subtitleHistory.length - 1];
+                const isDuplicate = lastEntry &&
+                    lastEntry.original === currentOriginalText &&
+                    lastEntry.translated === currentTranslatedText;
+
+                if (!isDuplicate) {
+                    subtitleHistory.push({
+                        timestamp: timestamp,
+                        time: now.getTime(),
+                        original: currentOriginalText,
+                        translated: currentTranslatedText,
+                        sourceLanguage: state.sourceLanguage,
+                        targetLanguage: state.targetLanguages[0] || 'en'
+                    });
+
+                    // 更新导出菜单信息
+                    updateExportInfo();
+                }
+            }
+
             // 更新主窗口
             const originalText = document.getElementById('originalText');
             const translatedText = document.getElementById('translatedText');
@@ -985,6 +1279,11 @@
                 return;
             }
 
+            // 记录会话开始时间
+            sessionStartTime = Date.now();
+            subtitleHistory = []; // 清空历史记录
+            updateExportInfo();
+
             state.isProcessing = true;
             const btn = document.getElementById('toggleBtn');
             btn.innerHTML = '<div style="width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>';
@@ -1069,6 +1368,15 @@
                 currentOriginalText = '';
                 currentTranslatedText = '';
                 updateSubtitleDisplay();
+
+                // 提示导出字幕
+                if (subtitleHistory.length > 0) {
+                    setTimeout(() => {
+                        if (confirm(`本次会话共有 ${subtitleHistory.length} 条字幕记录，是否导出？`)) {
+                            toggleExportMenu();
+                        }
+                    }, 500);
+                }
 
             } catch (error) {
                 console.error('停止失败:', error);
@@ -1163,6 +1471,17 @@
             // 语言变化监听
             document.getElementById('source-language').addEventListener('change', function() {
                 state.sourceLanguage = this.value;
+            });
+
+            // 点击外部关闭导出菜单
+            document.addEventListener('click', function(e) {
+                const exportMenu = document.getElementById('exportMenu');
+                const exportBtn = document.getElementById('exportBtn');
+                if (exportMenu.style.display !== 'none' &&
+                    !exportMenu.contains(e.target) &&
+                    !exportBtn.contains(e.target)) {
+                    exportMenu.style.display = 'none';
+                }
             });
         }
 
