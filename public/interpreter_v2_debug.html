@@ -700,12 +700,7 @@
                     <div class="language-selector">
                         <label for="voice-type">音色选择</label>
                         <select id="voice-type">
-                            <option value="female-kefu-xiaorui">女声小睿</option>
-                            <option value="Chinese (Mandarin)_IntellectualGirl">知性女声</option>
-                            <option value="male-qn-qingse">青年清澈男声</option>
-                            <option value="female-tianmei">甜美女声</option>
-                            <option value="danya_xuejie">淡雅学姐</option>
-                            <option value="male-qn-daxuesheng-jingpin">精品男声</option>
+                            <option value="">加载中...</option>
                         </select>
                     </div>
                     <div class="language-selector">
@@ -1193,18 +1188,80 @@
             return isValid;
         }
 
+        // 加载音色列表
+        async function loadVoiceOptions() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/voices`);
+                if (!response.ok) throw new Error('Failed to load voices');
+
+                const voices = await response.json();
+                const voiceSelect = document.getElementById('voice-type');
+
+                voiceSelect.innerHTML = '';
+
+                // 添加中文音色
+                if (voices.chinese && voices.chinese.length > 0) {
+                    const chineseOptGroup = document.createElement('optgroup');
+                    chineseOptGroup.label = '中文音色 (Chinese voices)';
+                    voices.chinese.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = voice.id;
+                        option.textContent = voice.name;
+                        chineseOptGroup.appendChild(option);
+                    });
+                    voiceSelect.appendChild(chineseOptGroup);
+                }
+
+                // 添加英文音色
+                if (voices.english && voices.english.length > 0) {
+                    const englishOptGroup = document.createElement('optgroup');
+                    englishOptGroup.label = '英文音色 (English voices)';
+                    voices.english.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = voice.id;
+                        option.textContent = voice.name;
+                        englishOptGroup.appendChild(option);
+                    });
+                    voiceSelect.appendChild(englishOptGroup);
+                }
+
+                // 添加日文音色
+                if (voices.japanese && voices.japanese.length > 0) {
+                    const japaneseOptGroup = document.createElement('optgroup');
+                    japaneseOptGroup.label = '日文音色 (Japanese voices)';
+                    voices.japanese.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = voice.id;
+                        option.textContent = voice.name;
+                        japaneseOptGroup.appendChild(option);
+                    });
+                    voiceSelect.appendChild(japaneseOptGroup);
+                }
+
+                // 设置默认选中第一个中文音色
+                if (voices.chinese && voices.chinese.length > 0) {
+                    voiceSelect.value = voices.chinese[0].id;
+                }
+
+            } catch (error) {
+                console.error('Failed to load voice options:', error);
+                const voiceSelect = document.getElementById('voice-type');
+                voiceSelect.innerHTML = '<option value="Chinese (Mandarin)_IntellectualGirl">知性女声（默认）</option>';
+            }
+        }
+
         function loadLanguageOptions() {
             const sourceSelect = document.getElementById('source-language');
-            
+
             sourceSelect.innerHTML = '<option value="">请选择识别语言</option>';
-            
+
             // 使用识别语言列表填充源语言选择器
             Object.entries(RECOGNITION_LANGUAGES).forEach(([code, name]) => {
                 sourceSelect.innerHTML += `<option value="${code}">${name}</option>`;
             });
-            
+
             sourceSelect.value = '16k_zh_en_caption';
-            
+
             // 初始化多语言选择弹窗
             initializeLanguageModal();
         }
@@ -1365,7 +1422,7 @@
                     "RoomId": roomId.toString(),
                     "TranscriptionParams": transcriptionParams,
                     "RecognizeConfig": {
-                        "Language": state.sourceLanguage,
+                        "Language": '16k_zh_en',
                         "AlternativeLanguage": [],
                         "HotWordList": hotwordInput,
                         "VadSilenceTime": vadSilenceTime,
@@ -1375,7 +1432,9 @@
                         "Mode": translationMode,
                         "TargetLanguages": state.targetLanguages,
                         "TTSConfig": {
-                            "VoiceId": document.getElementById('voice-type').value || "Chinese (Mandarin)_IntellectualGirl"
+                            "VoiceId": document.getElementById('voice-type').value || "Chinese (Mandarin)_IntellectualGirl",
+                             "Model": "flow_01_ex",
+                            //  "Speed": 1.1
                         }
                     }
                 };
@@ -1457,16 +1516,19 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 加载音色列表
+            await loadVoiceOptions();
+
             loadLanguageOptions();
             initializeDefaultTargetLanguages();
-            
+
             document.getElementById('source-language').addEventListener('change', validateLanguageSelection);
             document.getElementById('target-languages-btn').addEventListener('click', openLanguageModal);
             document.getElementById('translation_toggle').addEventListener('click', function() {
                 state.isActive ? stopTranslation() : startTranslation();
             });
-            
+
             // 初始化字幕显示
             updateSubtitleDisplay();
 

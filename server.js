@@ -95,6 +95,51 @@ app.post('/credentials', (req, res) => {
 
 
 /**
+ * Get available voice list
+ * GET /voices
+ */
+app.get('/voices', (req, res) => {
+  try {
+    const voices = {
+      chinese: [
+        { id: "English_Insightful_Speaker", name: "English_Insightful_Speaker", language: "zh" },
+        { id: "chico_ex_rrun4xc1tqfcafot8n4ko", name: "中文-herui", language: "zh" },
+        { id: "Chinese (Mandarin)_IntellectualGirl", name: "知性女声", language: "zh" },
+        { id: "male-qn-qingse", name: "青年清澈男声", language: "zh" },
+        { id: "female-tianmei", name: "甜美女声", language: "zh" },
+        { id: "danya_xuejie", name: "淡雅学姐", language: "zh" },
+        { id: "male-qn-daxuesheng-jingpin", name: "精品男声", language: "zh" },
+        { id: "moss_audio_ce44fc67-7ce3-11f0-8de5-96e35d26fb85", name: "中文-现代女声", language: "zh" },
+        { id: "moss_audio_aaa1346a-7ce7-11f0-8e61-2e6e3c7ee85d", name: "中文-现代男声", language: "zh" },
+        { id: "Chinese (Mandarin)_Lyrical_Voice", name: "中文-抒情女声", language: "zh" },
+        { id: "Chinese (Mandarin)_HK_Flight_Attendant", name: "中文-香港空乘", language: "zh" }
+      ],
+      english: [
+        { id: "English_Graceful_Lady", name: "英文-优雅女士", language: "en" },
+        { id: "English_Insightful_Speaker", name: "英文-洞察演讲者", language: "en" },
+        { id: "English_radiant_girl", name: "英文-明亮女孩", language: "en" },
+        { id: "English_Persuasive_Man", name: "英文-说服力男声", language: "en" },
+        { id: "moss_audio_6dc281eb-713c-11f0-a447-9613c873494c", name: "英文-现代女声", language: "en" },
+        { id: "moss_audio_570551b1-735c-11f0-b236-0adeeecad052", name: "英文-现代男声", language: "en" },
+        { id: "moss_audio_ad5baf92-735f-11f0-8263-fe5a2fe98ec8", name: "英文-青年男声", language: "en" },
+        { id: "English_Lucky_Robot", name: "英文-机器人", language: "en" }
+      ],
+      japanese: [
+        { id: "Japanese_Whisper_Belle", name: "日文-温柔女声", language: "ja" },
+        { id: "moss_audio_24875c4a-7be4-11f0-9359-4e72c55db738", name: "日文-女声1", language: "ja" },
+        { id: "moss_audio_7f4ee608-78ea-11f0-bb73-1e2a4cfcd245", name: "日文-女声2", language: "ja" },
+        { id: "moss_audio_c1a6a3ac-7be6-11f0-8e8e-36b92fbb4f95", name: "日文-女声3", language: "ja" }
+      ]
+    };
+
+    res.json(voices);
+  } catch (error) {
+    console.error('Failed to get voice list:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * Start simultaneous interpretation using transcription API
  * POST /interpretation
  */
